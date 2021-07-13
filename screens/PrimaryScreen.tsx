@@ -1,12 +1,12 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback } from "react";
 import { View, Text, Button } from "react-native";
-import { navigate } from "../navigation/service";
+import { push } from "../navigation/service";
 
 export const PrimaryScreen = () => {
   const navigation = useNavigation();
   const onPress = useCallback(() => {
-    navigate("Secondary");
+    push("Secondary");
   }, [navigation]);
   return (
     <View>
