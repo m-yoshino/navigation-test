@@ -6,15 +6,19 @@
 
 import * as Linking from 'expo-linking';
 
-export default {
+const linkingOptions = {
   prefixes: [Linking.makeUrl('/')],
   config: {
     screens: {
-      Root: {
+      Primary: 'primary',
+      Secondary: "secondary",
+      Tertiary: "tertiary",
+      TabNavigator: {
         screens: {
           TabOne: {
             screens: {
               TabOneScreen: 'one',
+              TabOneSubScreen: 'one-sub',
             },
           },
           TabTwo: {
@@ -28,3 +32,5 @@ export default {
     },
   },
 };
+
+export default linkingOptions;

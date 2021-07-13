@@ -4,7 +4,10 @@
  */
 
 export type RootStackParamList = {
-  Root: undefined;
+  Primary: undefined;
+  Secondary: undefined;
+  Tertiary: undefined;
+  TabNavigator: undefined;
   NotFound: undefined;
 };
 
@@ -15,8 +18,21 @@ export type BottomTabParamList = {
 
 export type TabOneParamList = {
   TabOneScreen: undefined;
+  TabOneSubScreen: undefined;
 };
 
 export type TabTwoParamList = {
   TabTwoScreen: undefined;
 };
+
+export type NavigationRouteNames =
+  | keyof RootStackParamList
+  | keyof BottomTabParamList
+  | keyof TabOneParamList
+  | keyof TabTwoParamList;
+
+export type NavigationRouteParamsMap = NavigationRouteNames &
+  RootStackParamList &
+  BottomTabParamList &
+  TabOneParamList &
+  TabTwoParamList;
