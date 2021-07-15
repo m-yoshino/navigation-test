@@ -17,7 +17,7 @@ import { PrimaryScreen } from "../screens/PrimaryScreen";
 import { SecondaryScreen } from "../screens/SecondaryScreen";
 import { TertiaryScreen } from "../screens/TertiaryScreen";
 import { RootStackParamList } from "../types";
-import BottomTabNavigator from "./BottomTabNavigator";
+import SideBarTabNavigator from "./SideBarTabNavigator";
 import LinkingConfiguration from "./LinkingConfiguration";
 import {
   onNavigationStateChange,
@@ -48,10 +48,10 @@ const Stack = createStackNavigator<RootStackParamList>();
 function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Primary" component={PrimaryScreen} />
+      {/* <Stack.Screen name="Primary" component={PrimaryScreen} />
       <Stack.Screen name="Secondary" component={SecondaryScreen} />
-      <Stack.Screen name="Tertiary" component={TertiaryScreen} />
-      <Stack.Screen name="TabNavigator" component={BottomTabNavigator} />
+      <Stack.Screen name="Tertiary" component={TertiaryScreen} /> */}
+      <Stack.Screen name="TabNavigator" component={SideBarTabNavigator} />
       <Stack.Screen
         name="NotFound"
         component={NotFoundScreen}

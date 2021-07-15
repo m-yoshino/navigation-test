@@ -11,7 +11,7 @@ export type RootStackParamList = {
   NotFound: undefined;
 };
 
-export type BottomTabParamList = {
+export type SideBarTabParamList = {
   TabOne: undefined;
   TabTwo: undefined;
 };
@@ -27,12 +27,12 @@ export type TabTwoParamList = {
 
 export type NavigationRouteNames =
   | keyof RootStackParamList
-  | keyof BottomTabParamList
+  | keyof SideBarTabParamList
   | keyof TabOneParamList
   | keyof TabTwoParamList;
 
 export type NavigationRouteParamsMap = NavigationRouteNames &
   RootStackParamList &
-  BottomTabParamList &
+  SideBarTabParamList &
   TabOneParamList &
   TabTwoParamList;
