@@ -27,29 +27,29 @@ export const CommonFocusView: React.FC = ({ children }) => {
   );
 };
 
-export const Focusable: React.FC<
-  Pick<TouchableOpacityProps, "onFocus" | "onBlur" | "onPress">
-> = ({ children, onPress, ...rest }) => {
+export const Focusable: React.FC<TouchableOpacityProps> = ({
+  onFocus: _onFocus,
+  onBlur: _onBlur,
+  ...rest
+}) => {
   const [isFocused, setFocusFlag] = useState(false);
   const onFocus = useCallback<Required<TouchableOpacityProps>["onFocus"]>(
     (event) => {
       setFocusFlag(true);
-      rest.onFocus?.(event);
+      _onFocus?.(event);
     },
-    [rest.onFocus]
+    [_onFocus]
   );
   const onBlur = useCallback<Required<TouchableOpacityProps>["onBlur"]>(
     (event) => {
       setFocusFlag(false);
-      rest.onBlur?.(event);
+      _onBlur?.(event);
     },
-    [rest.onBlur]
+    [_onBlur]
   );
   return (
     <FocusableContext.Provider value={isFocused}>
-      <TouchableOpacity onFocus={onFocus} onBlur={onBlur} onPress={onPress}>
-        {children}
-      </TouchableOpacity>
+      <TouchableOpacity onFocus={onFocus} onBlur={onBlur} {...rest} />
     </FocusableContext.Provider>
   );
 };
