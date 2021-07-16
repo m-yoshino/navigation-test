@@ -85,6 +85,7 @@ export function SideBarTabNavigator({
           {state.routes.map((route, index) => (
             <Focusable
               key={route.key}
+              hasTVPreferredFocus={index === state.index}
               onFocus={onFocus}
               onBlur={onBlur}
               onPress={() => {
