@@ -21,7 +21,7 @@ import {
 } from "react-native";
 import { CommonFocusView, Focusable } from "../components/Focusable";
 import { useAnimatedValue } from "../hooks/useAnimatedValue";
-import { sleep } from "../util/sleep";
+import { TVEvent, TV_EVENT_TYPE, useTVEvent } from "../hooks/useTVEvent";
 import { SidebarTabNavigatorFocusContext } from "./SideBarTabNavigatorFocusContext";
 
 const WIDTH_EXPAND_TAB = 100;
@@ -63,25 +63,7 @@ export function SideBarTabNavigator({
     setFocusContextValue({ ref: selectedTabRef });
   }, [state.index]);
 
-  const [isFocusTabInternalFlag, setFocusTabInternalFlag] = useState(false);
-  const onBlur = useCallback(() => setFocusTabInternalFlag(false), []);
-
   const [isFocusTab, setFocusTabFlag] = useState(false);
-  useEffect(() => {
-    let canceled = false;
-    const effect = async () => {
-      if (!isFocusTabInternalFlag) {
-        await sleep(50);
-      }
-      if (!canceled) {
-        setFocusTabFlag(isFocusTabInternalFlag);
-      }
-    };
-    effect();
-    return () => {
-      canceled = true;
-    };
-  }, [isFocusTabInternalFlag]);
 
   const animatedValue = useAnimatedValue();
   useEffect(() => {
@@ -92,6 +74,15 @@ export function SideBarTabNavigator({
       useNativeDriver: false,
     }).start();
   }, [isFocusTab]);
+
+  const tvEventListener = useCallback((event: TVEvent) => {
+    switch (event.eventType) {
+      case TV_EVENT_TYPE.RIGHT: {
+        setFocusTabFlag(false);
+      }
+    }
+  }, []);
+  useTVEvent(tvEventListener);
 
   return (
     <NavigationHelpersContext.Provider value={navigation}>
@@ -116,7 +107,6 @@ export function SideBarTabNavigator({
               key={route.key}
               hasTVPreferredFocus={index === state.index}
               onFocus={() => {
-                setFocusTabInternalFlag(true);
                 // const event = navigation.emit({
                 //   type: "tabPress",
                 //   target: route.key,
@@ -129,8 +119,8 @@ export function SideBarTabNavigator({
                 //     target: state.key,
                 //   });
                 // }
+                setFocusTabFlag(true);
               }}
-              onBlur={onBlur}
               onPress={() => {
                 const event = navigation.emit({
                   type: "tabPress",
