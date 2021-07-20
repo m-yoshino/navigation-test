@@ -64,7 +64,6 @@ export function SideBarTabNavigator({
   }, [state.index]);
 
   const [isFocusTabInternalFlag, setFocusTabInternalFlag] = useState(false);
-  const onFocus = useCallback(() => setFocusTabInternalFlag(true), []);
   const onBlur = useCallback(() => setFocusTabInternalFlag(false), []);
 
   const [isFocusTab, setFocusTabFlag] = useState(false);
@@ -116,7 +115,21 @@ export function SideBarTabNavigator({
               ref={onTabRef(index)}
               key={route.key}
               hasTVPreferredFocus={index === state.index}
-              onFocus={onFocus}
+              onFocus={() => {
+                setFocusTabInternalFlag(true);
+                // const event = navigation.emit({
+                //   type: "tabPress",
+                //   target: route.key,
+                //   canPreventDefault: true,
+                // });
+
+                // if (!event.defaultPrevented) {
+                //   navigation.dispatch({
+                //     ...TabActions.jumpTo(route.name),
+                //     target: state.key,
+                //   });
+                // }
+              }}
               onBlur={onBlur}
               onPress={() => {
                 const event = navigation.emit({
@@ -124,7 +137,6 @@ export function SideBarTabNavigator({
                   target: route.key,
                   canPreventDefault: true,
                 });
-
                 if (!event.defaultPrevented) {
                   navigation.dispatch({
                     ...TabActions.jumpTo(route.name),

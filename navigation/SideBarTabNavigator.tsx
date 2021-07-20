@@ -23,26 +23,13 @@ export default function SideBarTabNavigator() {
   return (
     <SideBarTab.Navigator
       initialRouteName="TabOne"
-      detachInactiveScreens
       tabBarOptions={{
         activeTintColor: Colors[colorScheme].tint,
       }}
     >
-      <SideBarTab.Screen
-        name="TabOne"
-        component={TabOneNavigator}
-        options={{}}
-      />
-      <SideBarTab.Screen
-        name="TabTwo"
-        component={TabTwoNavigator}
-        options={{}}
-      />
-      <SideBarTab.Screen
-        name="TabThree"
-        component={TabThreeNavigator}
-        options={{}}
-      />
+      <SideBarTab.Screen name="TabOne" component={TabOneNavigator} />
+      <SideBarTab.Screen name="TabTwo" component={TabTwoNavigator} />
+      <SideBarTab.Screen name="TabThree" component={TabThreeNavigator} />
     </SideBarTab.Navigator>
   );
 }

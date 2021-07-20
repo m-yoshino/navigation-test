@@ -18,7 +18,7 @@ export default function TabTwoScreen() {
         lightColor="#eee"
         darkColor="rgba(255,255,255,0.1)"
       />
-      <Focusable ref={touchableRef} hasTVPreferredFocus>
+      <Focusable ref={touchableRef}>
         <CommonFocusView>
           <EditScreenInfo path="/screens/TabTwoScreen.tsx" />
         </CommonFocusView>

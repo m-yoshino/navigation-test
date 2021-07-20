@@ -19,7 +19,7 @@ export default function TabOneScreen() {
         lightColor="#eee"
         darkColor="rgba(255,255,255,0.1)"
       />
-      <Focusable ref={touchableRef} hasTVPreferredFocus>
+      <Focusable ref={touchableRef}>
         <CommonFocusView>
           <EditScreenInfo path="/screens/TabOneScreen.tsx" />
         </CommonFocusView>
