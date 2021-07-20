@@ -26,6 +26,11 @@ const linkingOptions = {
               TabTwoScreen: 'two',
             },
           },
+          TabThree: {
+            screens: {
+              TabThreeScreen: 'three',
+            },
+          },
         },
       },
       NotFound: '*',

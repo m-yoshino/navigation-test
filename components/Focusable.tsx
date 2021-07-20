@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from "react";
+import React, { PropsWithChildren, useCallback, useContext } from "react";
 import { createContext } from "react";
 import { useState } from "react";
 import {
@@ -27,11 +27,10 @@ export const CommonFocusView: React.FC = ({ children }) => {
   );
 };
 
-export const Focusable: React.FC<TouchableOpacityProps> = ({
-  onFocus: _onFocus,
-  onBlur: _onBlur,
-  ...rest
-}) => {
+export const Focusable = React.forwardRef<
+  TouchableOpacity,
+  PropsWithChildren<TouchableOpacityProps>
+>(({ onFocus: _onFocus, onBlur: _onBlur, ...rest }, ref) => {
   const [isFocused, setFocusFlag] = useState(false);
   const onFocus = useCallback<Required<TouchableOpacityProps>["onFocus"]>(
     (event) => {
@@ -49,7 +48,7 @@ export const Focusable: React.FC<TouchableOpacityProps> = ({
   );
   return (
     <FocusableContext.Provider value={isFocused}>
-      <TouchableOpacity onFocus={onFocus} onBlur={onBlur} {...rest} />
+      <TouchableOpacity onFocus={onFocus} onBlur={onBlur} ref={ref} {...rest} />
     </FocusableContext.Provider>
   );
-};
+});

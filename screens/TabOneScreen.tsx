@@ -1,11 +1,16 @@
 import * as React from "react";
-import { StyleSheet } from "react-native";
-
+import { StyleSheet, TouchableOpacity } from "react-native";
 import EditScreenInfo from "../components/EditScreenInfo";
 import { CommonFocusView, Focusable } from "../components/Focusable";
 import { Text, View } from "../components/Themed";
+import { useNextFocus } from "../hooks/useNextFocus";
+import { useSideBarTabNavigatorFocusContext } from "../navigation/SideBarTabNavigatorFocusContext";
 
 export default function TabOneScreen() {
+  const lastFocusedTabRef = useSideBarTabNavigatorFocusContext();
+
+  const touchableRef = React.useRef<TouchableOpacity>(null);
+  useNextFocus(touchableRef, { left: lastFocusedTabRef?.ref });
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tab One</Text>
@@ -14,7 +19,7 @@ export default function TabOneScreen() {
         lightColor="#eee"
         darkColor="rgba(255,255,255,0.1)"
       />
-      <Focusable>
+      <Focusable ref={touchableRef} hasTVPreferredFocus>
         <CommonFocusView>
           <EditScreenInfo path="/screens/TabOneScreen.tsx" />
         </CommonFocusView>

@@ -6,13 +6,13 @@ import { Text, View } from "../components/Themed";
 import { useNextFocus } from "../hooks/useNextFocus";
 import { useSideBarTabNavigatorFocusContext } from "../navigation/SideBarTabNavigatorFocusContext";
 
-export default function TabTwoScreen() {
+export default function TabThreeScreen() {
   const lastFocusedTabRef = useSideBarTabNavigatorFocusContext();
   const touchableRef = React.useRef<TouchableOpacity>(null);
   useNextFocus(touchableRef, { left: lastFocusedTabRef?.ref });
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab Two</Text>
+      <Text style={styles.title}>Tab Three</Text>
       <View
         style={styles.separator}
         lightColor="#eee"
@@ -20,7 +20,7 @@ export default function TabTwoScreen() {
       />
       <Focusable ref={touchableRef} hasTVPreferredFocus>
         <CommonFocusView>
-          <EditScreenInfo path="/screens/TabTwoScreen.tsx" />
+          <EditScreenInfo path="/screens/TabThreeScreen.tsx" />
         </CommonFocusView>
       </Focusable>
     </View>

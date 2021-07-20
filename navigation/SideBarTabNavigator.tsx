@@ -10,6 +10,7 @@ import Colors from "../constants/Colors";
 import useColorScheme from "../hooks/useColorScheme";
 import TabOneScreen from "../screens/TabOneScreen";
 import TabOneSubScreen from "../screens/TabOneSubScreen";
+import TabThreeScreen from "../screens/TabThreeScreen";
 import TabTwoScreen from "../screens/TabTwoScreen";
 import * as types from "../types";
 import { createSideBarTabNavigator } from "./createSideBarNavigator";
@@ -22,6 +23,7 @@ export default function SideBarTabNavigator() {
   return (
     <SideBarTab.Navigator
       initialRouteName="TabOne"
+      detachInactiveScreens
       tabBarOptions={{
         activeTintColor: Colors[colorScheme].tint,
       }}
@@ -34,6 +36,11 @@ export default function SideBarTabNavigator() {
       <SideBarTab.Screen
         name="TabTwo"
         component={TabTwoNavigator}
+        options={{}}
+      />
+      <SideBarTab.Screen
+        name="TabThree"
+        component={TabThreeNavigator}
         options={{}}
       />
     </SideBarTab.Navigator>
@@ -72,5 +79,19 @@ function TabTwoNavigator() {
         options={{ headerTitle: "Tab Two Title" }}
       />
     </TabTwoStack.Navigator>
+  );
+}
+
+const TabThreeStack = createStackNavigator<types.TabThreeParamList>();
+
+function TabThreeNavigator() {
+  return (
+    <TabThreeStack.Navigator>
+      <TabThreeStack.Screen
+        name="TabThreeScreen"
+        component={TabThreeScreen}
+        options={{ headerTitle: "Tab Three Title" }}
+      />
+    </TabThreeStack.Navigator>
   );
 }
