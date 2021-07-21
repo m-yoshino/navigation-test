@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+// @see https://github.com/facebook/react-native/issues/31343
 // @ts-expect-error
 import {TVEventHandler} from "react-native";
 
