@@ -1,54 +1,55 @@
-import React, { PropsWithChildren, useCallback, useContext } from "react";
-import { createContext } from "react";
-import { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
+  StyleProp,
   TouchableOpacity,
   TouchableOpacityProps,
-  View,
-  StyleSheet,
+  ViewStyle,
 } from "react-native";
+import { FocusableContext, FocusableContextValue } from "./FocusableContext";
 
-export const FocusableContext = createContext(false);
-
-export const CommonFocusView: React.FC = ({ children }) => {
-  const isFocused = useContext(FocusableContext);
-  return (
-    <>
-      {children}
-      {isFocused && (
-        <View
-          style={[
-            StyleSheet.absoluteFill,
-            { borderWidth: 2, borderColor: "skyblue" },
-          ]}
-        />
-      )}
-    </>
-  );
+type TouchableComponentProps = TouchableOpacityProps;
+type FocusableProps = TouchableComponentProps & {
+  active?: boolean;
+  style?: StyleProp<ViewStyle>;
+  children: (value: FocusableContextValue) => React.ReactNode;
 };
 
-export const Focusable = React.forwardRef<
-  TouchableOpacity,
-  PropsWithChildren<TouchableOpacityProps>
->(({ onFocus: _onFocus, onBlur: _onBlur, ...rest }, ref) => {
-  const [isFocused, setFocusFlag] = useState(false);
-  const onFocus = useCallback<Required<TouchableOpacityProps>["onFocus"]>(
-    (event) => {
-      setFocusFlag(true);
-      _onFocus?.(event);
-    },
-    [_onFocus]
-  );
-  const onBlur = useCallback<Required<TouchableOpacityProps>["onBlur"]>(
-    (event) => {
-      setFocusFlag(false);
-      _onBlur?.(event);
-    },
-    [_onBlur]
-  );
-  return (
-    <FocusableContext.Provider value={isFocused}>
-      <TouchableOpacity onFocus={onFocus} onBlur={onBlur} ref={ref} {...rest} />
-    </FocusableContext.Provider>
-  );
-});
+export const Focusable = React.forwardRef<TouchableOpacity, FocusableProps>(
+  (
+    { active = true, onFocus: _onFocus, onBlur: _onBlur, children, ...rest },
+    ref
+  ) => {
+    const [focusableContextValue, setFocusableContextValue] =
+      useState<FocusableContextValue>(false);
+
+    const onFocus = useCallback<Required<TouchableComponentProps>["onFocus"]>(
+      (event) => {
+        setFocusableContextValue(true);
+        _onFocus?.(event);
+      },
+      [_onFocus]
+    );
+
+    const onBlur = useCallback<Required<TouchableComponentProps>["onBlur"]>(
+      (event) => {
+        setFocusableContextValue(false);
+        _onBlur?.(event);
+      },
+      [_onBlur]
+    );
+
+    return (
+      <FocusableContext.Provider value={focusableContextValue}>
+        <TouchableOpacity
+          ref={ref}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          disabled={!active}
+          {...rest}
+        >
+          <FocusableContext.Consumer children={children} />
+        </TouchableOpacity>
+      </FocusableContext.Provider>
+    );
+  }
+);

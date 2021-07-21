@@ -9,7 +9,7 @@ import {
   TabRouterOptions,
   useNavigationBuilder,
 } from "@react-navigation/native";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useEffect } from "react";
 import {
   Pressable,
@@ -19,13 +19,14 @@ import {
   Easing,
   TouchableOpacity,
 } from "react-native";
-import { CommonFocusView, Focusable } from "../components/Focusable";
+import { Focusable } from "../components/Focusable";
+import { FocusableView } from "../components/FocusableView";
 import { useAnimatedValue } from "../hooks/useAnimatedValue";
 import { TVEvent, TV_EVENT_TYPE, useTVEvent } from "../hooks/useTVEvent";
 import { SidebarTabNavigatorFocusContext } from "./SideBarTabNavigatorFocusContext";
 
-const WIDTH_EXPAND_TAB = 100;
-const WIDTH_TAB_BASE = 50;
+const WIDTH_EXPAND_TAB = 100; // ラベルを表示する為の追加幅
+const WIDTH_TAB_BASE = 50; // アイコンに合わせた幅
 
 type Props = DefaultNavigatorOptions<BottomTabNavigationOptions> &
   TabRouterOptions &
@@ -52,28 +53,24 @@ export function SideBarTabNavigator({
     []
   );
 
+  const [isFocusedTab, setFocusTabFlag] = useState(false);
   const selectedTabRef = useRef<TouchableOpacity | null>(null);
-  const [focusContextValue, setFocusContextValue] = useState<{
-    ref: React.RefObject<TouchableOpacity | null>;
-  }>({
-    ref: selectedTabRef,
-  });
-  useEffect(() => {
+  const [selectedTabRefState, setSelectedTabRefState] =
+    useState<React.RefObject<TouchableOpacity | null>>(selectedTabRef);
+  useLayoutEffect(() => {
     selectedTabRef.current = tabRef.current[state.index];
-    setFocusContextValue({ ref: selectedTabRef });
+    setSelectedTabRefState(selectedTabRef);
   }, [state.index]);
-
-  const [isFocusTab, setFocusTabFlag] = useState(false);
 
   const animatedValue = useAnimatedValue();
   useEffect(() => {
     Animated.timing(animatedValue, {
-      toValue: isFocusTab ? 1 : 0,
+      toValue: isFocusedTab ? 1 : 0,
       duration: 250,
       easing: Easing.out(Easing.ease),
       useNativeDriver: false,
     }).start();
-  }, [isFocusTab]);
+  }, [isFocusedTab]);
 
   const tvEventListener = useCallback((event: TVEvent) => {
     switch (event.eventType) {
@@ -107,26 +104,13 @@ export function SideBarTabNavigator({
               key={route.key}
               hasTVPreferredFocus={index === state.index}
               onFocus={() => {
-                // const event = navigation.emit({
-                //   type: "tabPress",
-                //   target: route.key,
-                //   canPreventDefault: true,
-                // });
-
-                // if (!event.defaultPrevented) {
-                //   navigation.dispatch({
-                //     ...TabActions.jumpTo(route.name),
-                //     target: state.key,
-                //   });
-                // }
                 setFocusTabFlag(true);
-              }}
-              onPress={() => {
                 const event = navigation.emit({
                   type: "tabPress",
                   target: route.key,
                   canPreventDefault: true,
                 });
+
                 if (!event.defaultPrevented) {
                   navigation.dispatch({
                     ...TabActions.jumpTo(route.name),
@@ -134,40 +118,48 @@ export function SideBarTabNavigator({
                   });
                 }
               }}
+              onPress={() => {
+                setFocusTabFlag(false);
+                tabRef.current.forEach((r) => {
+                  r.blur();
+                });
+              }}
             >
-              <CommonFocusView>
-                <Pressable
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    padding: 10,
-                  }}
-                >
-                  <View
+              {(focused) => (
+                <FocusableView focused={focused}>
+                  <Pressable
                     style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 50,
-                      backgroundColor: index === state.index ? "red" : "gray",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      padding: 10,
                     }}
-                  />
-                  {isFocusTab && (
+                  >
                     <View
                       style={{
-                        position: "absolute",
-                        top: 0,
-                        bottom: 0,
-                        left: 30 + 16 * 2,
-                        justifyContent: "center",
+                        width: 30,
+                        height: 30,
+                        borderRadius: 50,
+                        backgroundColor: index === state.index ? "red" : "gray",
                       }}
-                    >
-                      <Text>
-                        {descriptors[route.key].options.title || route.name}
-                      </Text>
-                    </View>
-                  )}
-                </Pressable>
-              </CommonFocusView>
+                    />
+                    {isFocusedTab && (
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          bottom: 0,
+                          left: 30 + 16 * 2,
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text>
+                          {descriptors[route.key].options.title || route.name}
+                        </Text>
+                      </View>
+                    )}
+                  </Pressable>
+                </FocusableView>
+              )}
             </Focusable>
           ))}
         </Animated.View>
@@ -185,7 +177,9 @@ export function SideBarTabNavigator({
             ],
           }}
         >
-          <SidebarTabNavigatorFocusContext.Provider value={focusContextValue}>
+          <SidebarTabNavigatorFocusContext.Provider
+            value={{ ref: selectedTabRefState, isFocusedTab }}
+          >
             {state.routes.map((route, i) => (
               <View
                 key={route.key}

@@ -1,8 +1,13 @@
 import React, { createContext, useContext } from "react";
 import { TouchableHighlight, TouchableOpacity } from "react-native";
 
-export const SidebarTabNavigatorFocusContext = createContext<{ref: React.RefObject<TouchableOpacity | TouchableHighlight | null> }>({ref: {current: null}});
-export const useSideBarTabNavigatorFocusContext = () => {
+type Touchable = TouchableOpacity | TouchableHighlight;
+
+export const SidebarTabNavigatorFocusContext = createContext<{
+  ref: React.RefObject<Touchable | null>;
+  isFocusedTab: boolean;
+}>({ ref: { current: null }, isFocusedTab: false });
+export const useSideBarTabNavigatorFocusContext = (): {ref: React.RefObject<Touchable | null> | undefined, isFocusedTab: boolean} => {
   const context = useContext(SidebarTabNavigatorFocusContext);
-  return context.ref.current !== null ? context : undefined;
+  return { ref: context.ref.current !== null ? context.ref : undefined, isFocusedTab: context.isFocusedTab };
 };
