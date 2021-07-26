@@ -1,12 +1,12 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ViewStyle, StyleProp } from "react-native";
 
-export const FocusableView: React.FC<{ focused: boolean }> = ({
-  focused,
-  children,
-}) => {
+export const FocusableView: React.FC<{
+  focused: boolean;
+  style?: StyleProp<ViewStyle>;
+}> = ({ focused, style, children }) => {
   return (
-    <View>
+    <View style={style}>
       {children}
       {focused && (
         <View

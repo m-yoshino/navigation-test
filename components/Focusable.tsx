@@ -8,7 +8,8 @@ import {
 import { FocusableContext, FocusableContextValue } from "./FocusableContext";
 
 type TouchableComponentProps = TouchableOpacityProps;
-type FocusableProps = TouchableComponentProps & {
+
+export type FocusableProps = TouchableComponentProps & {
   active?: boolean;
   style?: StyleProp<ViewStyle>;
   children: (value: FocusableContextValue) => React.ReactNode;
