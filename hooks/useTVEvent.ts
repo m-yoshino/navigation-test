@@ -7,7 +7,8 @@ export const TV_EVENT_KEY_ACTION = {
   ACTION_DOWN: 0,
   ACTION_UP: 1,
 } as const;
-type EventKeyAction = typeof TV_EVENT_KEY_ACTION[keyof typeof TV_EVENT_KEY_ACTION];
+type EventKeyAction =
+  typeof TV_EVENT_KEY_ACTION[keyof typeof TV_EVENT_KEY_ACTION];
 
 export const TV_EVENT_TYPE = {
   BLUR: "blur",
@@ -17,6 +18,14 @@ export const TV_EVENT_TYPE = {
   LEFT: "left",
   RIGHT: "right",
   SELECT: "select",
+  PLAY_PAUSE: "playPause",
+  REWIND: "rewind",
+  FAST_FORWARD: "fastForward",
+  STOP: "stop",
+  NEXT: "next",
+  PREVIOUS: "previous",
+  INFO: "info",
+  MENU: "menu",
 } as const;
 
 export type TVEventType = typeof TV_EVENT_TYPE[keyof typeof TV_EVENT_TYPE];
@@ -28,7 +37,6 @@ export type TVEvent = {
   tag: number;
   dispatchConfig: {};
 };
-
 
 export const useTVEvent = (callback: (event: TVEvent) => void) => {
   const callbackRef = useRef<typeof callback | undefined>();
