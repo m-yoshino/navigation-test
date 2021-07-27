@@ -3,7 +3,11 @@ import { useEffect, useRef } from "react";
 // @ts-expect-error
 import { TVEventHandler } from "react-native";
 
-type EventKeyAction = 0 | 1 | -1;
+export const TV_EVENT_KEY_ACTION = {
+  ACTION_DOWN: 0,
+  ACTION_UP: 1,
+} as const;
+type EventKeyAction = typeof TV_EVENT_KEY_ACTION[keyof typeof TV_EVENT_KEY_ACTION];
 
 export const TV_EVENT_TYPE = {
   BLUR: "blur",
@@ -34,7 +38,6 @@ export const useTVEvent = (callback: (event: TVEvent) => void) => {
 
   useEffect(() => {
     const listener = (_: unknown, event: TVEvent) => {
-      console.log({event});
       callbackRef.current?.(event);
     };
     const eventHandler = new TVEventHandler();
