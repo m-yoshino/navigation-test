@@ -11,7 +11,10 @@ import { useSideBarTabNavigatorFocusContext } from "../navigation/SideBarTabNavi
 export default function TabTwoScreen() {
   const lastFocusedTabRef = useSideBarTabNavigatorFocusContext();
   const touchableRef = React.useRef<TouchableOpacity>(null);
-  useNextFocus(touchableRef, { left: lastFocusedTabRef?.ref });
+  useNextFocus(touchableRef, {
+    nextFocusUp: null,
+    nextFocusLeft: lastFocusedTabRef?.ref,
+  });
   const isFocused = useIsFocused();
   return (
     <View style={styles.container}>

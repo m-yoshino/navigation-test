@@ -1,7 +1,7 @@
 import React, { createContext, useContext } from "react";
-import { TouchableHighlight, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
 
-type Touchable = TouchableOpacity | TouchableHighlight;
+type Touchable = TouchableOpacity;
 
 export const SidebarTabNavigatorFocusContext = createContext<{
   ref: React.RefObject<Touchable | null>;

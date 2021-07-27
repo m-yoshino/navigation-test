@@ -1,40 +1,14 @@
 import React, { useCallback } from "react";
-import {
-  findNodeHandle,
-  ListRenderItemInfo,
-  TouchableOpacity,
-} from "react-native";
+import { useMemo } from "react";
+import { useRef } from "react";
+import { ListRenderItemInfo, TouchableOpacity } from "react-native";
 import { FlatList, FlatListProps } from "react-native";
-import { Focusable } from "./Focusable";
-
-const getNextFocus = <ItemT extends unknown>(
-  { horizontal }: Pick<FocusableListProps<ItemT>, "horizontal">,
-  { index }: ListRenderItemInfo<ItemT>,
-  refList: React.RefObject<React.RefObject<TouchableOpacity>[]>
-) => {
-  const forwardRef = refList.current?.[index + 1];
-  const backwardRef = refList.current?.[index - 1];
-  const forwardHandle = forwardRef
-    ? findNodeHandle(forwardRef.current)
-    : undefined;
-  const backwardHandle = backwardRef
-    ? findNodeHandle(backwardRef.current)
-    : undefined;
-  if (horizontal) {
-    return {
-      nextFocusRight: forwardHandle,
-      nextFocusLeft: backwardHandle,
-    };
-  }
-  return {
-    nextFocusDown: forwardHandle,
-    nextFocusLeft: backwardHandle,
-  };
-};
+import { useNextFocus } from "../hooks/useNextFocus";
+import { Focusable, FocusableProps } from "./Focusable";
 
 export interface FocusableListProps<ItemT>
   extends Omit<FlatListProps<ItemT>, "renderItem"> {
-  ref?: React.RefObject<FlatList>;
+  listRef?: React.RefObject<FlatList>;
 
   onListElementFocus?: (
     element: React.RefObject<unknown>,
@@ -49,12 +23,7 @@ export interface FocusableListProps<ItemT>
     info: { item: ItemT; index: number }
   ) => void;
 
-  nextFocusUp?: React.RefObject<unknown>;
-  nextFocusLeft?: React.RefObject<unknown>;
-  nextFocusRight?: React.RefObject<unknown>;
-  nextFocusDown?: React.RefObject<unknown>;
-
-  focusableItemProps?: {};
+  focusableItemProps?: Partial<FocusableProps>;
 
   renderItem: (
     info: ListRenderItemInfo<ItemT> & { focused: boolean }
@@ -62,7 +31,7 @@ export interface FocusableListProps<ItemT>
 }
 
 export const FocusableList = <ItemT extends unknown>({
-  ref,
+  listRef,
   data,
   focusableItemProps,
   renderItem: _renderItem,
@@ -71,31 +40,162 @@ export const FocusableList = <ItemT extends unknown>({
   onListElementPress,
   ...rest
 }: FocusableListProps<ItemT>) => {
-  const itemRef = React.useRef<React.RefObject<TouchableOpacity>[]>([]);
+  const itemRef = React.useRef<
+    React.MutableRefObject<TouchableOpacity | null>[]
+  >([]);
+  const onItemRef = useCallback((r: TouchableOpacity, index: number) => {
+    if (typeof itemRef.current[index] === "undefined") {
+      itemRef.current[index] = React.createRef<TouchableOpacity | null>();
+    }
+    if (r) itemRef.current[index].current = r;
+  }, []);
 
   const renderItem = useCallback<
     NonNullable<FlatListProps<ItemT>["renderItem"]>
   >(
-    (props) => {
-      const { index } = props;
-      if (typeof itemRef.current[index] === "undefined") {
-        itemRef.current[index] = React.createRef<TouchableOpacity>();
-      }
-      return (
-        <Focusable
-          ref={itemRef.current[index]}
-          onFocus={(_) => onListElementFocus?.(itemRef.current[index], props)}
-          onBlur={(_) => onListElementBlur?.(itemRef.current[index], props)}
-          onPress={(_) => onListElementPress?.(itemRef.current[index], props)}
-          {...focusableItemProps}
-          {...getNextFocus(rest, props, itemRef)}
-        >
-          {(focused) => _renderItem?.({ ...props, focused })}
-        </Focusable>
-      );
-    },
-    [_renderItem, onListElementFocus, onListElementBlur, onListElementPress]
+    (props) => (
+      <FocusableListItem
+        itemRef={itemRef}
+        onItemRef={onItemRef}
+        isHorizontal={!!rest.horizontal}
+        onListElementFocus={onListElementFocus}
+        onListElementBlur={onListElementBlur}
+        onListElementPress={onListElementPress}
+        {...props}
+        {...focusableItemProps}
+      >
+        {(focused) => _renderItem?.({ ...props, focused })}
+      </FocusableListItem>
+    ),
+    [
+      _renderItem,
+      onListElementFocus,
+      onListElementBlur,
+      onListElementPress,
+      focusableItemProps,
+    ]
   );
 
-  return <FlatList ref={ref} data={data} renderItem={renderItem} {...rest} />;
+  return (
+    <FlatList
+      ref={listRef}
+      data={data}
+      renderItem={renderItem}
+      extraData={itemRef.current.join(",")}
+      {...rest}
+    />
+  );
+};
+
+const FocusableListItem = <ItemT extends unknown>({
+  index,
+  item,
+  separators,
+  itemRef,
+  onItemRef,
+  isHorizontal,
+  onListElementFocus,
+  onListElementBlur,
+  onListElementPress,
+  children,
+  nextFocusDown,
+  nextFocusUp,
+  nextFocusLeft,
+  nextFocusRight,
+  ...rest
+}: ListRenderItemInfo<ItemT> &
+  Pick<
+    FocusableListProps<ItemT>,
+    "onListElementFocus" | "onListElementBlur" | "onListElementPress"
+  > & {
+    itemRef: React.MutableRefObject<
+      React.MutableRefObject<TouchableOpacity | null>[]
+    >;
+    onItemRef: (ref: TouchableOpacity, index: number) => void;
+    isHorizontal: boolean;
+  } & FocusableProps) => {
+  const selfRef = useRef<TouchableOpacity | null>(null);
+  const onRef = useCallback(
+    (ref: TouchableOpacity) => {
+      selfRef.current = ref;
+      onItemRef(ref, index);
+    },
+    [onItemRef]
+  );
+
+  const nextFocus = useMemo(() => {
+    const override = {
+      nextFocusDown: nextFocusDown?.current ? nextFocusDown : undefined,
+      nextFocusUp: nextFocusUp?.current ? nextFocusUp : undefined,
+      nextFocusLeft: nextFocusLeft?.current ? nextFocusLeft : undefined,
+      nextFocusRight: nextFocusRight?.current ? nextFocusRight : undefined,
+    };
+    const selfHandle = selfRef.current ? selfRef : undefined;
+    const forwardRef = itemRef.current?.[index + 1];
+    const backwardRef = itemRef.current?.[index - 1];
+    const forwardHandle =
+      forwardRef && forwardRef.current ? forwardRef : undefined;
+    const backwardHandle =
+      backwardRef && backwardRef.current ? backwardRef : undefined;
+    if (isHorizontal) {
+      return {
+        nextFocusRight: forwardHandle
+          ? forwardHandle
+          : override?.nextFocusRight ?? selfHandle,
+        nextFocusLeft: backwardHandle
+          ? backwardHandle
+          : override?.nextFocusLeft ?? selfHandle,
+        nextFocusUp: override?.nextFocusUp ?? selfHandle,
+        nextFocusDown: override?.nextFocusDown ?? selfHandle,
+      };
+    }
+    return {
+      nextFocusDown: forwardHandle
+        ? forwardHandle
+        : override?.nextFocusDown ?? selfHandle,
+      nextFocusUp: backwardHandle
+        ? backwardHandle
+        : override?.nextFocusUp ?? selfHandle,
+      nextFocusLeft: override?.nextFocusLeft ?? selfHandle,
+      nextFocusRight: override?.nextFocusRight ?? selfHandle,
+    };
+  }, [
+    isHorizontal,
+    index,
+    itemRef.current.join(","),
+    selfRef.current,
+    nextFocusDown,
+    nextFocusUp,
+    nextFocusLeft,
+    nextFocusRight,
+  ]);
+
+  useNextFocus(selfRef, nextFocus);
+
+  const onFocus = useCallback(
+    () => onListElementFocus?.(selfRef, { index, item }),
+    [onListElementFocus, index, item]
+  );
+
+  const onBlur = useCallback(
+    () => onListElementBlur?.(selfRef, { index, item }),
+    [onListElementBlur, index, item]
+  );
+
+  const onPress = useCallback(
+    () => onListElementPress?.(selfRef, { index, item }),
+    [onListElementPress, index, item]
+  );
+
+  return (
+    <Focusable
+      ref={onRef}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      onPress={onPress}
+      children={children}
+      hasTVPreferredFocus={index === 0}
+      {...rest}
+    />
+  );
 };

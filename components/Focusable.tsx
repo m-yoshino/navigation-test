@@ -11,46 +11,52 @@ type TouchableComponentProps = TouchableOpacityProps;
 
 export type FocusableProps = TouchableComponentProps & {
   active?: boolean;
+  nextFocusUp?: React.RefObject<TouchableOpacity | null>;
+  nextFocusLeft?: React.RefObject<TouchableOpacity | null>;
+  nextFocusRight?: React.RefObject<TouchableOpacity | null>;
+  nextFocusDown?: React.RefObject<TouchableOpacity | null>;
   style?: StyleProp<ViewStyle>;
   children: (value: FocusableContextValue) => React.ReactNode;
 };
 
-export const Focusable = React.forwardRef<TouchableOpacity, FocusableProps>(
-  (
-    { active = true, onFocus: _onFocus, onBlur: _onBlur, children, ...rest },
-    ref
-  ) => {
-    const [focusableContextValue, setFocusableContextValue] =
-      useState<FocusableContextValue>(false);
+export const Focusable = React.memo(
+  React.forwardRef<TouchableOpacity, FocusableProps>(
+    (
+      { active = true, onFocus: _onFocus, onBlur: _onBlur, children, ...rest },
+      ref
+    ) => {
+      const [focusableContextValue, setFocusableContextValue] =
+        useState<FocusableContextValue>(false);
 
-    const onFocus = useCallback<Required<TouchableComponentProps>["onFocus"]>(
-      (event) => {
-        setFocusableContextValue(true);
-        _onFocus?.(event);
-      },
-      [_onFocus]
-    );
+      const onFocus = useCallback<Required<TouchableComponentProps>["onFocus"]>(
+        (event) => {
+          setFocusableContextValue(true);
+          _onFocus?.(event);
+        },
+        [_onFocus]
+      );
 
-    const onBlur = useCallback<Required<TouchableComponentProps>["onBlur"]>(
-      (event) => {
-        setFocusableContextValue(false);
-        _onBlur?.(event);
-      },
-      [_onBlur]
-    );
+      const onBlur = useCallback<Required<TouchableComponentProps>["onBlur"]>(
+        (event) => {
+          setFocusableContextValue(false);
+          _onBlur?.(event);
+        },
+        [_onBlur]
+      );
 
-    return (
-      <FocusableContext.Provider value={focusableContextValue}>
-        <TouchableOpacity
-          ref={ref}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          disabled={!active}
-          {...rest}
-        >
-          <FocusableContext.Consumer children={children} />
-        </TouchableOpacity>
-      </FocusableContext.Provider>
-    );
-  }
+      return (
+        <FocusableContext.Provider value={focusableContextValue}>
+          <TouchableOpacity
+            ref={ref}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            disabled={!active}
+            {...rest}
+          >
+            <FocusableContext.Consumer children={children} />
+          </TouchableOpacity>
+        </FocusableContext.Provider>
+      );
+    }
+  )
 );

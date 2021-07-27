@@ -46,7 +46,7 @@ export function SideBarTabNavigator({
   const tabRef = useRef<TouchableOpacity[]>([]);
   const onTabRef = useCallback(
     (index: number) => (r: TouchableOpacity | null) => {
-      if (typeof r !== "undefined" && r !== null) {
+      if (r !== null) {
         tabRef.current[index] = r;
       }
     },
@@ -105,6 +105,12 @@ export function SideBarTabNavigator({
               hasTVPreferredFocus={index === state.index}
               onFocus={() => {
                 setFocusTabFlag(true);
+              }}
+              onPress={() => {
+                setFocusTabFlag(false);
+                tabRef.current.forEach((r) => {
+                  r.blur();
+                });
                 const event = navigation.emit({
                   type: "tabPress",
                   target: route.key,
@@ -117,12 +123,6 @@ export function SideBarTabNavigator({
                     target: state.key,
                   });
                 }
-              }}
-              onPress={() => {
-                setFocusTabFlag(false);
-                tabRef.current.forEach((r) => {
-                  r.blur();
-                });
               }}
             >
               {(focused) => (

@@ -12,7 +12,10 @@ export default function TabOneScreen() {
   const lastFocusedTabRef = useSideBarTabNavigatorFocusContext();
 
   const touchableRef = React.useRef<TouchableOpacity>(null);
-  useNextFocus(touchableRef, { left: lastFocusedTabRef?.ref });
+  useNextFocus(touchableRef, {
+    nextFocusLeft: lastFocusedTabRef?.ref,
+    nextFocusUp: null,
+  });
   const isFocused = useIsFocused();
   return (
     <View style={styles.container}>
