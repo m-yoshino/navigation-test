@@ -12,6 +12,7 @@ export const TV_EVENT_TYPE = {
   DOWN: "down",
   LEFT: "left",
   RIGHT: "right",
+  SELECT: "select",
 } as const;
 
 export type TVEventType = typeof TV_EVENT_TYPE[keyof typeof TV_EVENT_TYPE];
@@ -33,6 +34,7 @@ export const useTVEvent = (callback: (event: TVEvent) => void) => {
 
   useEffect(() => {
     const listener = (_: unknown, event: TVEvent) => {
+      console.log({event});
       callbackRef.current?.(event);
     };
     const eventHandler = new TVEventHandler();
