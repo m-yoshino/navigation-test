@@ -52,7 +52,10 @@ export default function TabThreeScreen() {
   const renderItem = useCallback<FocusableListProps<string>["renderItem"]>(
     ({ focused, index, item }) => {
       return (
-        <FocusableView focused={focused} style={{ padding: 8 }}>
+        <FocusableView
+          focused={focused}
+          style={{ padding: 8, width: itemWidth }}
+        >
           <Text>item: {item}</Text>
           <Text>index: {index}</Text>
           <Text>focused: {focused ? "true" : "false"}</Text>
@@ -69,7 +72,7 @@ export default function TabThreeScreen() {
   >((element, info) => {
     console.log("onListElementFocus", { element, info });
     // 意図通り動かなかった
-    // indexの後半(おそらくrenderingされていなかった要素のrefが取得されていない？)
+    // 初期レンダリング直後に描画されなかったitemがリストがスクロールされた時に読み込まれてもそのタイミングでFocusableListがupdateされない為、itemRef.current[index]は空になってしまう
     // listRef.current?.scrollToIndex({ index: info.index });
   }, []);
 
@@ -96,13 +99,14 @@ export default function TabThreeScreen() {
 
   const getItemLayout = useCallback<
     NonNullable<FocusableListProps<string>["getItemLayout"]>
-  >((data, index) => {
-    return {
+  >(
+    (_, index) => ({
       length: itemWidth,
       offset: itemWidth * index,
       index,
-    };
-  }, []);
+    }),
+    []
+  );
 
   return (
     <>

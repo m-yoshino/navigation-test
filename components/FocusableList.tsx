@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useMemo } from "react";
 import { useRef } from "react";
 import { ListRenderItemInfo, TouchableOpacity } from "react-native";
@@ -50,6 +50,10 @@ export const FocusableList = <ItemT extends unknown>({
     if (r) itemRef.current[index].current = r;
   }, []);
 
+  useEffect(() => {
+    console.log({ itemRef });
+  });
+
   const renderItem = useCallback<
     NonNullable<FlatListProps<ItemT>["renderItem"]>
   >(
@@ -77,13 +81,7 @@ export const FocusableList = <ItemT extends unknown>({
   );
 
   return (
-    <FlatList
-      ref={listRef}
-      data={data}
-      renderItem={renderItem}
-      extraData={itemRef.current.join(",")}
-      {...rest}
-    />
+    <FlatList ref={listRef} data={data} renderItem={renderItem} {...rest} />
   );
 };
 
@@ -122,6 +120,10 @@ const FocusableListItem = <ItemT extends unknown>({
     },
     [onItemRef]
   );
+
+  useEffect(() => {
+    console.log("FocusableItem is rendered", index);
+  });
 
   const nextFocus = useMemo(() => {
     const override = {
