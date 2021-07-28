@@ -1,8 +1,9 @@
 import { useIsFocused } from "@react-navigation/native";
 import * as React from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { useCallback } from "react";
+import { Button, StyleSheet, TouchableOpacity } from "react-native";
 import EditScreenInfo from "../components/EditScreenInfo";
-import { Focusable } from "../components/Focusable";
+import { forceFocus, Focusable } from "../components/Focusable";
 import { FocusableView } from "../components/FocusableView";
 import { Text, View } from "../components/Themed";
 import { useNextFocus } from "../hooks/useNextFocus";
@@ -17,6 +18,13 @@ export default function TabOneScreen() {
     nextFocusUp: null,
   });
   const isFocused = useIsFocused();
+
+  const buttonRef = React.useRef<TouchableOpacity>(null);
+  const willFocusRef = React.useRef<TouchableOpacity>(null);
+  const onPressButton = useCallback(() => {
+    forceFocus(willFocusRef);
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tab One</Text>
@@ -29,6 +37,22 @@ export default function TabOneScreen() {
         {(focused) => (
           <FocusableView focused={focused}>
             <EditScreenInfo path="/screens/TabOneScreen.tsx" />
+          </FocusableView>
+        )}
+      </Focusable>
+
+      <Focusable ref={buttonRef} onPress={onPressButton}>
+        {(focused) => (
+          <FocusableView focused={focused} style={{ padding: 8 }}>
+            <Button title="press" onPress={() => {}} />
+          </FocusableView>
+        )}
+      </Focusable>
+
+      <Focusable ref={willFocusRef}>
+        {(focused) => (
+          <FocusableView focused={focused} style={{ padding: 8 }}>
+            <Button title="will focus" onPress={() => {}} />
           </FocusableView>
         )}
       </Focusable>

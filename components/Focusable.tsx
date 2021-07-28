@@ -60,3 +60,7 @@ export const Focusable = React.memo(
     }
   )
 );
+
+export const forceFocus = (ref: React.RefObject<TouchableOpacity>) => {
+  ref.current?.setNativeProps({ hasTVPreferredFocus: true });
+};
