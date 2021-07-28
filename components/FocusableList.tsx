@@ -4,22 +4,22 @@ import { useRef } from "react";
 import { ListRenderItemInfo, TouchableOpacity } from "react-native";
 import { FlatList, FlatListProps } from "react-native";
 import { useNextFocus } from "../hooks/useNextFocus";
-import { Focusable, FocusableProps } from "./Focusable";
+import { Focusable, FocusableProps, forceFocus } from "./Focusable";
 
 export interface FocusableListProps<ItemT>
   extends Omit<FlatListProps<ItemT>, "renderItem"> {
   listRef?: React.RefObject<FlatList>;
 
   onListElementFocus?: (
-    element: React.RefObject<unknown>,
+    element: React.RefObject<TouchableOpacity>,
     info: { item: ItemT; index: number }
   ) => void;
   onListElementBlur?: (
-    element: React.RefObject<unknown>,
+    element: React.RefObject<TouchableOpacity>,
     info: { item: ItemT; index: number }
   ) => void;
   onListElementPress?: (
-    element: React.RefObject<unknown>,
+    element: React.RefObject<TouchableOpacity>,
     info: { item: ItemT; index: number }
   ) => void;
 
@@ -35,7 +35,7 @@ export const FocusableList = <ItemT extends unknown>({
   data,
   focusableItemProps,
   renderItem: _renderItem,
-  onListElementFocus,
+  onListElementFocus: _onListElementFocus,
   onListElementBlur,
   onListElementPress,
   ...rest
@@ -50,9 +50,28 @@ export const FocusableList = <ItemT extends unknown>({
     if (r) itemRef.current[index].current = r;
   }, []);
 
+  const lastFocusedItemRef = useRef<TouchableOpacity | null>(
+    itemRef.current[0]?.current
+  );
+  const onFocusContainer = useCallback(() => {
+    forceFocus(lastFocusedItemRef);
+  }, []);
+
   useEffect(() => {
-    console.log({ itemRef });
-  });
+    if (!lastFocusedItemRef.current) {
+      lastFocusedItemRef.current = itemRef.current[0].current;
+    }
+  }, []);
+
+  const onListElementFocus = useCallback<
+    NonNullable<typeof _onListElementFocus>
+  >(
+    (element, info) => {
+      lastFocusedItemRef.current = element.current;
+      _onListElementFocus?.(element, info);
+    },
+    [_onListElementFocus]
+  );
 
   const renderItem = useCallback<
     NonNullable<FlatListProps<ItemT>["renderItem"]>
@@ -81,7 +100,11 @@ export const FocusableList = <ItemT extends unknown>({
   );
 
   return (
-    <FlatList ref={listRef} data={data} renderItem={renderItem} {...rest} />
+    <Focusable style={{ flex: 1 }} onFocus={onFocusContainer}>
+      {(_) => (
+        <FlatList ref={listRef} data={data} renderItem={renderItem} {...rest} />
+      )}
+    </Focusable>
   );
 };
 
@@ -196,7 +219,6 @@ const FocusableListItem = <ItemT extends unknown>({
       onBlur={onBlur}
       onPress={onPress}
       children={children}
-      hasTVPreferredFocus={index === 0}
       {...rest}
     />
   );
