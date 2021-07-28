@@ -11,10 +11,6 @@ type TouchableComponentProps = TouchableOpacityProps;
 
 export type FocusableProps = TouchableComponentProps & {
   active?: boolean;
-  nextFocusUp?: React.RefObject<TouchableOpacity | null>;
-  nextFocusLeft?: React.RefObject<TouchableOpacity | null>;
-  nextFocusRight?: React.RefObject<TouchableOpacity | null>;
-  nextFocusDown?: React.RefObject<TouchableOpacity | null>;
   style?: StyleProp<ViewStyle>;
   children: (value: FocusableContextValue) => React.ReactNode;
 };

@@ -89,14 +89,6 @@ export default function TabThreeScreen() {
     console.log("onListElementPress", { element, info });
   }, []);
 
-  const focusableItemProps = React.useMemo(
-    () => ({
-      nextFocusUp: touchableRef,
-      nextFocusLeft: lastFocusedTabRef,
-    }),
-    []
-  );
-
   const getItemLayout = useCallback<
     NonNullable<FocusableListProps<string>["getItemLayout"]>
   >(
@@ -128,7 +120,6 @@ export default function TabThreeScreen() {
       <FocusableList
         horizontal
         listRef={listRef}
-        focusableItemProps={focusableItemProps}
         data={data}
         renderItem={renderItem}
         onListElementFocus={onListElementFocus}
