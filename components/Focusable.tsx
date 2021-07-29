@@ -7,13 +7,13 @@ import {
 } from "react-native";
 import { FocusableContext, FocusableContextValue } from "./FocusableContext";
 
-type TouchableComponentProps = TouchableOpacityProps;
-
+export type TouchableComponentProps = TouchableOpacityProps;
 export type FocusableProps = TouchableComponentProps & {
   active?: boolean;
   style?: StyleProp<ViewStyle>;
   children: (value: FocusableContextValue) => React.ReactNode;
 };
+export type FocusableRef = React.RefObject<TouchableOpacity>;
 
 export const Focusable = React.memo(
   React.forwardRef<TouchableOpacity, FocusableProps>(
@@ -57,6 +57,6 @@ export const Focusable = React.memo(
   )
 );
 
-export const forceFocus = (ref: React.RefObject<TouchableOpacity>) => {
+export const forceFocus = (ref: FocusableRef) => {
   ref.current?.setNativeProps({ hasTVPreferredFocus: true });
 };

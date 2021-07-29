@@ -71,9 +71,6 @@ export default function TabThreeScreen() {
     NonNullable<FocusableListProps<string>["onListElementFocus"]>
   >((element, info) => {
     console.log("onListElementFocus", { element, info });
-    // 意図通り動かなかった
-    // 初期レンダリング直後に描画されなかったitemがリストがスクロールされた時に読み込まれてもそのタイミングでFocusableListがupdateされない為、itemRef.current[index]は空になってしまう
-    // listRef.current?.scrollToIndex({ index: info.index });
   }, []);
 
   const onListElementBlur = useCallback<
@@ -118,6 +115,7 @@ export default function TabThreeScreen() {
         </Focusable>
       </View>
       <FocusableList
+        nextFocusLeft={touchableRef}
         horizontal
         listRef={listRef}
         data={data}

@@ -1,27 +1,38 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { useRef } from "react";
 import { ListRenderItemInfo, TouchableOpacity } from "react-native";
 import { FlatList, FlatListProps } from "react-native";
-import { Focusable, FocusableProps, forceFocus } from "./Focusable";
+import { useNextFocus } from "../hooks/useNextFocus";
+import {
+  Focusable,
+  FocusableProps,
+  FocusableRef,
+  forceFocus,
+} from "./Focusable";
 
 export interface FocusableListProps<ItemT>
   extends Omit<FlatListProps<ItemT>, "renderItem"> {
   listRef?: React.RefObject<FlatList>;
 
   onListElementFocus?: (
-    element: React.RefObject<TouchableOpacity>,
-    info: { item: ItemT; index: number }
+    element: FocusableRef,
+    info: ListRenderItemInfo<ItemT>
   ) => void;
   onListElementBlur?: (
-    element: React.RefObject<TouchableOpacity>,
-    info: { item: ItemT; index: number }
+    element: FocusableRef,
+    info: ListRenderItemInfo<ItemT>
   ) => void;
   onListElementPress?: (
-    element: React.RefObject<TouchableOpacity>,
-    info: { item: ItemT; index: number }
+    element: FocusableRef,
+    info: ListRenderItemInfo<ItemT>
   ) => void;
 
   focusableItemProps?: Partial<FocusableProps>;
+
+  nextFocusRight?: FocusableRef;
+  nextFocusLeft?: FocusableRef;
+  nextFocusUp?: FocusableRef;
+  nextFocusDown?: FocusableRef;
 
   renderItem: (
     info: ListRenderItemInfo<ItemT> & { focused: boolean }
@@ -36,6 +47,10 @@ export const FocusableList = <ItemT extends unknown>({
   onListElementFocus: _onListElementFocus,
   onListElementBlur,
   onListElementPress,
+  nextFocusRight,
+  nextFocusLeft,
+  nextFocusUp,
+  nextFocusDown,
   ...rest
 }: FocusableListProps<ItemT>) => {
   const itemRef = React.useRef<
@@ -76,11 +91,17 @@ export const FocusableList = <ItemT extends unknown>({
   >(
     (props) => (
       <FocusableListItem
+        isHorizontal={!!rest.horizontal}
+        dataLength={data?.length ?? 0}
         itemRef={itemRef}
         onItemRef={onItemRef}
         onListElementFocus={onListElementFocus}
         onListElementBlur={onListElementBlur}
         onListElementPress={onListElementPress}
+        nextFocusLeft={nextFocusLeft}
+        nextFocusRight={nextFocusRight}
+        nextFocusUp={nextFocusUp}
+        nextFocusDown={nextFocusDown}
         {...props}
         {...focusableItemProps}
       >
@@ -108,22 +129,37 @@ export const FocusableList = <ItemT extends unknown>({
 const FocusableListItem = <ItemT extends unknown>({
   index,
   item,
+  separators,
   itemRef,
   onItemRef,
   onListElementFocus,
   onListElementBlur,
   onListElementPress,
+  nextFocusRight,
+  nextFocusLeft,
+  nextFocusUp,
+  nextFocusDown,
+  isHorizontal,
+  dataLength,
   children,
   ...rest
 }: ListRenderItemInfo<ItemT> &
   Pick<
     FocusableListProps<ItemT>,
-    "onListElementFocus" | "onListElementBlur" | "onListElementPress"
+    | "onListElementFocus"
+    | "onListElementBlur"
+    | "onListElementPress"
+    | "nextFocusRight"
+    | "nextFocusLeft"
+    | "nextFocusUp"
+    | "nextFocusDown"
   > & {
     itemRef: React.MutableRefObject<
       React.MutableRefObject<TouchableOpacity | null>[]
     >;
     onItemRef: (ref: TouchableOpacity, index: number) => void;
+    isHorizontal: boolean;
+    dataLength: number;
   } & FocusableProps) => {
   const selfRef = useRef<TouchableOpacity | null>(null);
   const onRef = useCallback(
@@ -135,19 +171,46 @@ const FocusableListItem = <ItemT extends unknown>({
   );
 
   const onFocus = useCallback(
-    () => onListElementFocus?.(selfRef, { index, item }),
-    [onListElementFocus, index, item]
+    () => onListElementFocus?.(selfRef, { index, item, separators }),
+    [onListElementFocus, index, item, separators]
   );
 
   const onBlur = useCallback(
-    () => onListElementBlur?.(selfRef, { index, item }),
-    [onListElementBlur, index, item]
+    () => onListElementBlur?.(selfRef, { index, item, separators }),
+    [onListElementBlur, index, item, separators]
   );
 
   const onPress = useCallback(
-    () => onListElementPress?.(selfRef, { index, item }),
-    [onListElementPress, index, item]
+    () => onListElementPress?.(selfRef, { index, item, separators }),
+    [onListElementPress, index, item, separators]
   );
+
+  const nextFocus = useMemo(() => {
+    if (isHorizontal) {
+      return {
+        nextFocusLeft: index === 0 ? nextFocusLeft : undefined,
+        nextFocusRight: dataLength === index + 1 ? nextFocusRight : undefined,
+        nextFocusUp,
+        nextFocusDown,
+      };
+    }
+    return {
+      nextFocusUp: index === 0 ? nextFocusUp : undefined,
+      nextFocusDown: dataLength === index + 1 ? nextFocusDown : undefined,
+      nextFocusLeft,
+      nextFocusRight,
+    };
+  }, [
+    isHorizontal,
+    index,
+    dataLength,
+    nextFocusLeft,
+    nextFocusRight,
+    nextFocusUp,
+    nextFocusDown,
+  ]);
+
+  useNextFocus(selfRef, nextFocus);
 
   return (
     <Focusable
