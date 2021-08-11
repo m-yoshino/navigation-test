@@ -3,11 +3,13 @@ import * as React from "react";
 import { useCallback } from "react";
 import { Button, StyleSheet, TouchableOpacity } from "react-native";
 import EditScreenInfo from "../components/EditScreenInfo";
-import { forceFocus, Focusable } from "../components/Focusable";
+import { Focusable } from "../components/Focusable";
+import { FocusableCarousel } from "../components/FocusableCarousel";
 import { FocusableView } from "../components/FocusableView";
 import { Text, View } from "../components/Themed";
 import { useNextFocus } from "../hooks/useNextFocus";
 import { useSideBarTabNavigatorFocusContext } from "../navigation/SideBarTabNavigatorFocusContext";
+import { forceFocus } from "../util/forceFocus";
 
 export default function TabOneScreen() {
   const lastFocusedTabRef = useSideBarTabNavigatorFocusContext();
@@ -56,6 +58,25 @@ export default function TabOneScreen() {
           </FocusableView>
         )}
       </Focusable>
+
+      <FocusableCarousel
+        dimension={{ width: 200, height: 100 }}
+        data={["001", "002", "003", "004", "005", "006"]}
+        onListElementPress={(info) => console.log("onListElementPress", info)}
+        renderItem={({ item, focused }) => (
+          <View
+            style={{
+              width: 200,
+              height: 100,
+              alignItems: "center",
+              justifyContent: "center",
+              transform: [{ scale: focused ? 1 : 1 }],
+            }}
+          >
+            <Text>{item}</Text>
+          </View>
+        )}
+      />
     </View>
   );
 }

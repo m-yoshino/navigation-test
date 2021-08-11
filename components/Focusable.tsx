@@ -13,7 +13,6 @@ export type FocusableProps = TouchableComponentProps & {
   style?: StyleProp<ViewStyle>;
   children: (value: FocusableContextValue) => React.ReactNode;
 };
-export type FocusableRef = React.RefObject<TouchableOpacity>;
 
 export const Focusable = React.memo(
   React.forwardRef<TouchableOpacity, FocusableProps>(
@@ -56,7 +55,3 @@ export const Focusable = React.memo(
     }
   )
 );
-
-export const forceFocus = (ref: FocusableRef) => {
-  ref.current?.setNativeProps({ hasTVPreferredFocus: true });
-};

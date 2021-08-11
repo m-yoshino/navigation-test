@@ -2,13 +2,10 @@ import React, { useCallback, useEffect, useMemo } from "react";
 import { useRef } from "react";
 import { ListRenderItemInfo, TouchableOpacity } from "react-native";
 import { FlatList, FlatListProps } from "react-native";
+import type { FocusableRef } from "../@types/tvos";
 import { useNextFocus } from "../hooks/useNextFocus";
-import {
-  Focusable,
-  FocusableProps,
-  FocusableRef,
-  forceFocus,
-} from "./Focusable";
+import { forceFocus } from "../util/forceFocus";
+import { Focusable, FocusableProps } from "./Focusable";
 
 export interface FocusableListProps<ItemT>
   extends Omit<FlatListProps<ItemT>, "renderItem"> {
