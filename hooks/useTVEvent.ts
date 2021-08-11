@@ -68,6 +68,7 @@ export const useTVEvent = (callback: TVEventListener, disable?: boolean) => {
     }
     return () => {
       eventHandler?.disable();
+      eventTypeToKeyActionMapRef.current.clear();
     };
   }, [disable]);
 };
