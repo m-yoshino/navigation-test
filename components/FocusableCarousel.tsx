@@ -99,7 +99,7 @@ export const FocusableCarousel = <ItemT extends unknown>({
   useEffect(() => {
     Animated.timing(animatedValue, {
       toValue: focusIndex,
-      duration: 150,
+      duration: 250,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
       ...animationConfig,
@@ -152,11 +152,13 @@ export const FocusableCarousel = <ItemT extends unknown>({
               <View
                 style={{
                   position: "absolute",
-                  top: 0,
-                  left: 0,
-                  ...dimension,
-                  borderWidth: 1,
-                  borderColor: "green",
+                  top: -6,
+                  left: -6,
+                  width: dimension.width + 12,
+                  height: dimension.height + 12,
+                  borderWidth: 2,
+                  borderColor: "white",
+                  borderRadius: 4,
                 }}
                 pointerEvents="none"
               />
