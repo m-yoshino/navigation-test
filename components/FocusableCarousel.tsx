@@ -29,6 +29,8 @@ export interface FocusableCarouselProps<ItemT>
   dimension: { width: number; height: number };
   animationConfig?: Pick<Animated.TimingAnimationConfig, "duration" | "easing">;
 
+  FocusFrameComponent?: React.ComponentType<{ focused: boolean }>;
+
   renderItem: (
     info: Omit<ListRenderItemInfo<ItemT>, "separators"> & { focused: boolean }
   ) => React.ReactNode;
@@ -48,6 +50,7 @@ export const FocusableCarousel = <ItemT extends unknown>({
   nextFocusRight,
   nextFocusLeft,
   animationConfig,
+  FocusFrameComponent,
 }: FocusableCarouselProps<ItemT>) => {
   const dataLength = data?.length ?? 0;
 
@@ -140,28 +143,25 @@ export const FocusableCarousel = <ItemT extends unknown>({
                 ],
               }}
             >
-              {data?.map((item, index) => {
-                return (
-                  <View key={index} style={{ ...dimension }}>
-                    {renderItem({ item, index, focused: index === focusIndex })}
-                  </View>
-                );
-              })}
+              {data?.map((item, index) => (
+                <View key={index} style={{ ...dimension }}>
+                  {renderItem({ item, index, focused: index === focusIndex })}
+                </View>
+              ))}
             </Animated.View>
-            {focused && (
+            {FocusFrameComponent && (
               <View
                 style={{
                   position: "absolute",
-                  top: -6,
-                  left: -6,
-                  width: dimension.width + 12,
-                  height: dimension.height + 12,
-                  borderWidth: 2,
-                  borderColor: "white",
-                  borderRadius: 4,
+                  top: 0,
+                  left: 0,
+                  ...dimension,
+                  backgroundColor: "transparent",
                 }}
                 pointerEvents="none"
-              />
+              >
+                <FocusFrameComponent focused={focused} />
+              </View>
             )}
           </View>
         );
