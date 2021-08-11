@@ -39,22 +39,35 @@ export type TVEvent = {
 
 export type TVEventListener = (event: TVEvent) => void;
 
-export const useTVEvent = (callback: TVEventListener) => {
+type EventTypeToKeyActionMap = Map<TVEventType, EventKeyAction>;
+
+export const useTVEvent = (callback: TVEventListener, disable?: boolean) => {
+  const eventTypeToKeyActionMapRef = useRef<EventTypeToKeyActionMap>(new Map());
   const callbackRef = useRef<typeof callback | undefined>();
   useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
 
   useEffect(() => {
+    let eventHandler: typeof TVEventHandler | undefined;
     const listener = (_: unknown, event: TVEvent) => {
       // for prevent duplication call
-      if (event.eventKeyAction === TV_EVENT_KEY_ACTION.ACTION_DOWN) return;
-      callbackRef.current?.(event);
+      if (event.eventKeyAction === TV_EVENT_KEY_ACTION.ACTION_DOWN) {
+        eventTypeToKeyActionMapRef.current.set(event.eventType, event.eventKeyAction);
+        return;
+      }
+      // for prevent call when element focused first
+      if (eventTypeToKeyActionMapRef.current.get(event.eventType) === TV_EVENT_KEY_ACTION.ACTION_DOWN) {
+        eventTypeToKeyActionMapRef.current.delete(event.eventType);
+        callbackRef.current?.(event);
+      }
     };
-    const eventHandler = new TVEventHandler();
-    eventHandler.enable(null, listener);
+    if (!disable) {
+      const eventHandler = new TVEventHandler();
+      eventHandler.enable(null, listener);
+    }
     return () => {
-      eventHandler.disable();
+      eventHandler?.disable();
     };
-  }, []);
+  }, [disable]);
 };

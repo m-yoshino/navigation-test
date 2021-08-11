@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useEffect } from "react";
 import { Easing } from "react-native";
 import {
@@ -55,6 +55,9 @@ export const FocusableCarousel = <ItemT extends unknown>({
   const dataLength = data?.length ?? 0;
 
   const [focusIndex, setFocusIndex] = useState(0);
+  const [containerFocused, setContainerFocused] = useState(false);
+  const onContainerFocused = useCallback(() => setContainerFocused(true), []);
+  const onContainerBlured = useCallback(() => setContainerFocused(false), []);
 
   const containerRef = useFocusableRef();
   useNextFocus(containerRef, {
@@ -64,12 +67,19 @@ export const FocusableCarousel = <ItemT extends unknown>({
     nextFocusRight: containerRef,
   });
 
-  const focusedFlagRef = useRef(false);
+  const animatedValue = useAnimatedValue(0);
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: focusIndex,
+      duration: 250,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+      ...animationConfig,
+    }).start();
+  }, [focusIndex, animationConfig]);
+
   const tvEventListener = useCallback<TVEventListener>(
     (event) => {
-      if (!focusedFlagRef.current) {
-        return;
-      }
       switch (event.eventType) {
         case TV_EVENT_TYPE.LEFT: {
           if (focusIndex !== 0) {
@@ -96,29 +106,19 @@ export const FocusableCarousel = <ItemT extends unknown>({
     [data, focusIndex, nextFocusLeft, nextFocusRight, dataLength]
   );
 
-  useTVEvent(tvEventListener);
-
-  const animatedValue = useAnimatedValue(0);
-  useEffect(() => {
-    Animated.timing(animatedValue, {
-      toValue: focusIndex,
-      duration: 250,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: true,
-      ...animationConfig,
-    }).start();
-  }, [focusIndex, animationConfig]);
+  useTVEvent(tvEventListener, !containerFocused);
 
   return (
     <Focusable
       ref={containerRef}
+      onBlur={onContainerBlured}
+      onFocus={onContainerFocused}
       style={{
         width: "100%",
         height: dimension.height,
       }}
     >
       {(focused) => {
-        focusedFlagRef.current = focused;
         return (
           <View
             style={{
