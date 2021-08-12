@@ -134,11 +134,15 @@ export const FocusableCarousel = <ItemT extends unknown>({
       style={containerStyle}
     >
       {(focused) => (
-        <View style={containerStyle}>
+        <>
           <Animated.View style={itemsContainerStyle}>
             {data?.map((item, index) => (
               <View key={index} style={itemSize}>
-                {renderItem({ item, index, focused: index === focusIndex })}
+                {renderItem({
+                  item,
+                  index,
+                  focused: containerFocused && index === focusIndex,
+                })}
               </View>
             ))}
           </Animated.View>
@@ -150,7 +154,7 @@ export const FocusableCarousel = <ItemT extends unknown>({
               <FocusFrameComponent focused={focused} />
             </View>
           )}
-        </View>
+        </>
       )}
     </Focusable>
   );

@@ -15,7 +15,7 @@ const FocusableCarouselItem = <ItemT extends unknown>({
   useEffect(() => {
     Animated.timing(animatedValue, {
       toValue: focused ? 1 : 0,
-      duration: 250,
+      duration: 150,
       useNativeDriver: true,
     }).start();
   }, [focused]);

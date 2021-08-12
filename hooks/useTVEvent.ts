@@ -65,7 +65,7 @@ export const useTVEvent = (callback: TVEventListener, disable?: boolean) => {
       }
     };
     if (!disable) {
-      const eventHandler = new TVEventHandler();
+      eventHandler = new TVEventHandler();
       eventHandler.enable(null, listener);
     }
     return () => {
