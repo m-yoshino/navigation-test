@@ -1,8 +1,12 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useEffect } from "react";
 import { Easing } from "react-native";
-import { Animated, View } from "react-native";
-import type { FlatListProps, ListRenderItemInfo } from "react-native";
+import { Animated, View, StyleSheet } from "react-native";
+import type {
+  FlatListProps,
+  ListRenderItemInfo,
+  ViewStyle,
+} from "react-native";
 import type { FocusableRef } from "../@types/tvos";
 import { useAnimatedValue } from "../hooks/useAnimatedValue";
 import { useFocusableRef } from "../hooks/useFocusableRef";
@@ -96,56 +100,52 @@ export const FocusableCarousel = <ItemT extends unknown>({
 
   useTVEvent(tvEventListener, !containerFocused);
 
+  const containerStyle = useMemo(
+    () => ({
+      width: "100%",
+      height: itemSize.height,
+    }),
+    [itemSize.height]
+  );
+
+  const itemsContainerStyle = useMemo<Animated.WithAnimatedArray<ViewStyle>>(
+    () => [
+      styles.absoluteContainer,
+      {
+        flexDirection: "row",
+        transform: [
+          {
+            translateX: animatedValue.interpolate({
+              inputRange: [0, dataLength - 1],
+              outputRange: [0, -1 * (dataLength - 1) * itemSize.width],
+            }),
+          },
+        ],
+      },
+    ],
+    [animatedValue, dataLength, itemSize.width]
+  );
+
   return (
     <Focusable
       ref={containerRef}
       onBlur={onContainerBlured}
       onFocus={onContainerFocused}
-      style={{
-        width: "100%",
-        height: itemSize.height,
-      }}
+      style={containerStyle}
     >
       {(focused) => {
         return (
-          <View
-            style={{
-              position: "relative",
-              width: "100%",
-              height: itemSize.height,
-            }}
-          >
-            <Animated.View
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                flexDirection: "row",
-                transform: [
-                  {
-                    translateX: animatedValue.interpolate({
-                      inputRange: [0, dataLength - 1],
-                      outputRange: [0, -1 * (dataLength - 1) * itemSize.width],
-                    }),
-                  },
-                ],
-              }}
-            >
+          <View style={containerStyle}>
+            <Animated.View style={itemsContainerStyle}>
               {data?.map((item, index) => (
-                <View key={index} style={{ ...itemSize }}>
+                <View key={index} style={itemSize}>
                   {renderItem({ item, index, focused: index === focusIndex })}
                 </View>
               ))}
             </Animated.View>
             {FocusFrameComponent && (
               <View
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  ...itemSize,
-                  backgroundColor: "transparent",
-                }}
+                style={[styles.absoluteContainer, itemSize]}
                 pointerEvents="none"
               >
                 <FocusFrameComponent focused={focused} />
@@ -157,3 +157,12 @@ export const FocusableCarousel = <ItemT extends unknown>({
     </Focusable>
   );
 };
+
+const styles = StyleSheet.create({
+  absoluteContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    backgroundColor: "transparent",
+  },
+});
