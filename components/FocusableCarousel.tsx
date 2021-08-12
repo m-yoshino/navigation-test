@@ -133,27 +133,25 @@ export const FocusableCarousel = <ItemT extends unknown>({
       onFocus={onContainerFocused}
       style={containerStyle}
     >
-      {(focused) => {
-        return (
-          <View style={containerStyle}>
-            <Animated.View style={itemsContainerStyle}>
-              {data?.map((item, index) => (
-                <View key={index} style={itemSize}>
-                  {renderItem({ item, index, focused: index === focusIndex })}
-                </View>
-              ))}
-            </Animated.View>
-            {FocusFrameComponent && (
-              <View
-                style={[styles.absoluteContainer, itemSize]}
-                pointerEvents="none"
-              >
-                <FocusFrameComponent focused={focused} />
+      {(focused) => (
+        <View style={containerStyle}>
+          <Animated.View style={itemsContainerStyle}>
+            {data?.map((item, index) => (
+              <View key={index} style={itemSize}>
+                {renderItem({ item, index, focused: index === focusIndex })}
               </View>
-            )}
-          </View>
-        );
-      }}
+            ))}
+          </Animated.View>
+          {FocusFrameComponent && (
+            <View
+              style={[styles.absoluteContainer, itemSize]}
+              pointerEvents="none"
+            >
+              <FocusFrameComponent focused={focused} />
+            </View>
+          )}
+        </View>
+      )}
     </Focusable>
   );
 };
