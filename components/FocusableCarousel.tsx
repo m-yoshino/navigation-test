@@ -1,21 +1,14 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useEffect } from "react";
 import { Easing } from "react-native";
-import {
-  Animated,
-  FlatListProps,
-  ListRenderItemInfo,
-  View,
-} from "react-native";
+import { Animated, View } from "react-native";
+import type { FlatListProps, ListRenderItemInfo } from "react-native";
 import type { FocusableRef } from "../@types/tvos";
 import { useAnimatedValue } from "../hooks/useAnimatedValue";
 import { useFocusableRef } from "../hooks/useFocusableRef";
 import { useNextFocus } from "../hooks/useNextFocus";
-import {
-  TVEventListener,
-  TV_EVENT_TYPE,
-  useTVEvent,
-} from "../hooks/useTVEvent";
+import { useTVEvent } from "../hooks/useTVEvent";
+import type { TVEventListener } from "../hooks/useTVEvent";
 import { forceFocus } from "../util/forceFocus";
 import { Focusable } from "./Focusable";
 
@@ -78,31 +71,26 @@ export const FocusableCarousel = <ItemT extends unknown>({
     }).start();
   }, [focusIndex, animationConfig]);
 
-  const tvEventListener = useCallback<TVEventListener>(
-    (event) => {
-      switch (event.eventType) {
-        case TV_EVENT_TYPE.LEFT: {
-          if (focusIndex !== 0) {
-            setFocusIndex(focusIndex - 1);
-          } else if (nextFocusLeft) {
-            forceFocus(nextFocusLeft);
-          }
-          break;
+  const tvEventListener = useMemo<TVEventListener>(
+    () => ({
+      left: () => {
+        if (focusIndex !== 0) {
+          setFocusIndex(focusIndex - 1);
+        } else if (nextFocusLeft) {
+          forceFocus(nextFocusLeft);
         }
-        case TV_EVENT_TYPE.RIGHT: {
-          if (focusIndex + 1 < dataLength) {
-            setFocusIndex(focusIndex + 1);
-          } else if (nextFocusRight) {
-            forceFocus(nextFocusRight);
-          }
-          break;
+      },
+      right: () => {
+        if (focusIndex + 1 < dataLength) {
+          setFocusIndex(focusIndex + 1);
+        } else if (nextFocusRight) {
+          forceFocus(nextFocusRight);
         }
-        case TV_EVENT_TYPE.SELECT: {
-          onListElementPress?.({ item: data![focusIndex], index: focusIndex });
-          break;
-        }
-      }
-    },
+      },
+      select: () => {
+        onListElementPress?.({ item: data![focusIndex], index: focusIndex });
+      },
+    }),
     [data, focusIndex, nextFocusLeft, nextFocusRight, dataLength]
   );
 

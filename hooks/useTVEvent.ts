@@ -37,7 +37,9 @@ export type TVEvent = {
   dispatchConfig: {};
 };
 
-export type TVEventListener = (event: TVEvent) => void;
+export type TVEventListener = {
+  [key in TVEventType]?: (event: TVEvent) => void;
+};
 
 type EventTypeToKeyActionMap = Map<TVEventType, EventKeyAction>;
 
@@ -59,7 +61,7 @@ export const useTVEvent = (callback: TVEventListener, disable?: boolean) => {
       // to prevent calls when the element is first focused after disable flag is "false"
       if (eventTypeToKeyActionMapRef.current.get(event.eventType) === TV_EVENT_KEY_ACTION.ACTION_DOWN) {
         eventTypeToKeyActionMapRef.current.delete(event.eventType);
-        callbackRef.current?.(event);
+        callbackRef.current?.[event.eventType]?.(event);
       }
     };
     if (!disable) {
