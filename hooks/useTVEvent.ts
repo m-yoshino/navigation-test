@@ -51,12 +51,12 @@ export const useTVEvent = (callback: TVEventListener, disable?: boolean) => {
   useEffect(() => {
     let eventHandler: typeof TVEventHandler | undefined;
     const listener = (_: unknown, event: TVEvent) => {
-      // for prevent duplication call
+      // to prevent duplicate calls
       if (event.eventKeyAction === TV_EVENT_KEY_ACTION.ACTION_DOWN) {
         eventTypeToKeyActionMapRef.current.set(event.eventType, event.eventKeyAction);
         return;
       }
-      // for prevent call when element focused first
+      // to prevent calls when the element is first focused after disable flag is "false"
       if (eventTypeToKeyActionMapRef.current.get(event.eventType) === TV_EVENT_KEY_ACTION.ACTION_DOWN) {
         eventTypeToKeyActionMapRef.current.delete(event.eventType);
         callbackRef.current?.(event);
