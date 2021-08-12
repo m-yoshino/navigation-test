@@ -17,7 +17,7 @@ import { forceFocus } from "../util/forceFocus";
 import { Focusable } from "./Focusable";
 
 export interface FocusableCarouselProps<ItemT>
-  extends Omit<FlatListProps<ItemT>, "renderItem"> {
+  extends Pick<FlatListProps<ItemT>, "data" | "ListEmptyComponent"> {
   nextFocusRight?: FocusableRef;
   nextFocusLeft?: FocusableRef;
   nextFocusUp?: FocusableRef;
@@ -48,6 +48,7 @@ export const FocusableCarousel = <ItemT extends unknown>({
   nextFocusLeft,
   animationConfig,
   FocusFrameComponent,
+  ListEmptyComponent,
 }: FocusableCarouselProps<ItemT>) => {
   const dataLength = data?.length ?? 0;
 
@@ -136,15 +137,17 @@ export const FocusableCarousel = <ItemT extends unknown>({
       {(focused) => (
         <>
           <Animated.View style={itemsContainerStyle}>
-            {data?.map((item, index) => (
-              <View key={index} style={itemSize}>
-                {renderItem({
-                  item,
-                  index,
-                  focused: containerFocused && index === focusIndex,
-                })}
-              </View>
-            ))}
+            {dataLength === 0
+              ? ListEmptyComponent
+              : data?.map((item, index) => (
+                  <View key={index} style={itemSize}>
+                    {renderItem({
+                      item,
+                      index,
+                      focused: containerFocused && index === focusIndex,
+                    })}
+                  </View>
+                )) ?? ListEmptyComponent}
           </Animated.View>
           {FocusFrameComponent && (
             <View
