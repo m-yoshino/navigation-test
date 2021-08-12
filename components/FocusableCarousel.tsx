@@ -26,7 +26,7 @@ export interface FocusableCarouselProps<ItemT>
   nextFocusUp?: FocusableRef;
   nextFocusDown?: FocusableRef;
 
-  dimension: { width: number; height: number };
+  itemSize: { width: number; height: number };
   animationConfig?: Pick<Animated.TimingAnimationConfig, "duration" | "easing">;
 
   FocusFrameComponent?: React.ComponentType<{ focused: boolean }>;
@@ -42,7 +42,7 @@ export interface FocusableCarouselProps<ItemT>
 
 export const FocusableCarousel = <ItemT extends unknown>({
   data,
-  dimension,
+  itemSize,
   renderItem,
   onListElementPress,
   nextFocusDown,
@@ -115,7 +115,7 @@ export const FocusableCarousel = <ItemT extends unknown>({
       onFocus={onContainerFocused}
       style={{
         width: "100%",
-        height: dimension.height,
+        height: itemSize.height,
       }}
     >
       {(focused) => {
@@ -124,7 +124,7 @@ export const FocusableCarousel = <ItemT extends unknown>({
             style={{
               position: "relative",
               width: "100%",
-              height: dimension.height,
+              height: itemSize.height,
             }}
           >
             <Animated.View
@@ -137,14 +137,14 @@ export const FocusableCarousel = <ItemT extends unknown>({
                   {
                     translateX: animatedValue.interpolate({
                       inputRange: [0, dataLength - 1],
-                      outputRange: [0, -1 * (dataLength - 1) * dimension.width],
+                      outputRange: [0, -1 * (dataLength - 1) * itemSize.width],
                     }),
                   },
                 ],
               }}
             >
               {data?.map((item, index) => (
-                <View key={index} style={{ ...dimension }}>
+                <View key={index} style={{ ...itemSize }}>
                   {renderItem({ item, index, focused: index === focusIndex })}
                 </View>
               ))}
@@ -155,7 +155,7 @@ export const FocusableCarousel = <ItemT extends unknown>({
                   position: "absolute",
                   top: 0,
                   left: 0,
-                  ...dimension,
+                  ...itemSize,
                   backgroundColor: "transparent",
                 }}
                 pointerEvents="none"

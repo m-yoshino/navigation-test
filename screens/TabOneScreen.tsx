@@ -6,7 +6,7 @@ import { Text, View } from "../components/Themed";
 
 export default function TabOneScreen() {
   const data = useMemo(() => ["001", "002", "003", "004", "005", "006"], []);
-  const dimension = useMemo(() => ({ width: 200, height: 100 }), []);
+  const itemSize = useMemo(() => ({ width: 200, height: 100 }), []);
   const onListElementPress = useCallback(
     (info) => console.log("onListElementPress", info),
     []
@@ -20,7 +20,7 @@ export default function TabOneScreen() {
         style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
       >
         <CommonFocusableCarousel
-          dimension={dimension}
+          itemSize={itemSize}
           data={data}
           onListElementPress={onListElementPress}
         />
