@@ -48,7 +48,6 @@ const FocusableCarouselItem = <ItemT extends unknown>({
 };
 
 export const CommonFocusableCarousel = <ItemT extends unknown>({
-  itemSize,
   ...rest
 }: Omit<
   FocusableCarouselProps<ItemT>,
@@ -56,7 +55,6 @@ export const CommonFocusableCarousel = <ItemT extends unknown>({
 >) => (
   <FocusableCarousel
     {...rest}
-    itemSize={itemSize}
     renderItem={({ item, focused }) => (
       <View
         style={{

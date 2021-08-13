@@ -14,6 +14,10 @@ import { Focusable } from "./Focusable";
 import { useLayout } from "../hooks/useLayout";
 
 const DEFAULT_WINDOW_SIZE = 3;
+const DEFAULT_ANIMATION_CONFIG = {
+  duration: 250,
+  easing: Easing.out(Easing.ease),
+};
 
 export interface FocusableCarouselProps<ItemT>
   extends Pick<FlatListProps<ItemT>, "data" | "ListEmptyComponent"> {
@@ -22,12 +26,13 @@ export interface FocusableCarouselProps<ItemT>
   nextFocusUp?: FocusableRef;
   nextFocusDown?: FocusableRef;
 
-  itemSize: { width: number; height: number };
-  animationConfig?: Pick<Animated.TimingAnimationConfig, "duration" | "easing">;
-
   FocusFrameComponent?: React.ComponentType<{ focused: boolean }>;
 
+  containerHeight: number;
+
   windowSize?: number;
+
+  getItemLayout: NonNullable<FlatListProps<ItemT>["getItemLayout"]>;
 
   renderItem: (
     info: Omit<ListRenderItemInfo<ItemT>, "separators"> & { focused: boolean }
@@ -36,21 +41,24 @@ export interface FocusableCarouselProps<ItemT>
   onListElementPress?: (
     info: Omit<ListRenderItemInfo<ItemT>, "separators">
   ) => void;
+
+  animationConfig?: Pick<Animated.TimingAnimationConfig, "duration" | "easing">;
 }
 
 export const FocusableCarousel = <ItemT extends unknown>({
   data,
-  itemSize,
   renderItem,
   onListElementPress,
+  containerHeight,
   nextFocusDown,
   nextFocusUp,
   nextFocusRight,
   nextFocusLeft,
-  animationConfig,
+  animationConfig = DEFAULT_ANIMATION_CONFIG,
   FocusFrameComponent,
   ListEmptyComponent,
   windowSize = DEFAULT_WINDOW_SIZE,
+  getItemLayout,
 }: FocusableCarouselProps<ItemT>) => {
   const dataLength = data?.length ?? 0;
   const isEmpty = dataLength === 0;
@@ -72,8 +80,6 @@ export const FocusableCarousel = <ItemT extends unknown>({
   useEffect(() => {
     Animated.timing(animatedValue, {
       toValue: focusIndex,
-      duration: 250,
-      easing: Easing.out(Easing.ease),
       useNativeDriver: true,
       ...animationConfig,
     }).start();
@@ -107,19 +113,21 @@ export const FocusableCarousel = <ItemT extends unknown>({
   const containerStyle = useMemo(
     () => ({
       width: "100%",
-      height: itemSize.height,
+      height: containerHeight,
     }),
-    [itemSize.height]
+    [containerHeight]
   );
 
   const { width: containerWidth, onLayout: onLayoutContainer } = useLayout();
 
-  const viewableIndexList = useMemo(() => {
-    return (
+  const viewableIndexList = useMemo(
+    () =>
       data?.flatMap((_, index) => {
-        const itemWidth = itemSize.width;
-
-        const itemBegin = index * itemWidth;
+        const { length: itemWidth, offset: itemBegin } = getItemLayout(
+          // @ts-expect-error
+          data,
+          index
+        );
         const itemEnd = itemBegin + itemWidth;
 
         const adjustOffset = ((windowSize - 1) * containerWidth) / 2;
@@ -136,9 +144,9 @@ export const FocusableCarousel = <ItemT extends unknown>({
         const canRenderTheEnd = containerBegin <= itemEnd && itemEnd <= containerEnd;
 
         return canRenderTheBeginning && canRenderTheEnd ? [index] : [];
-      }) ?? []
-    );
-  }, [data, itemSize, focusIndex, containerWidth, windowSize]);
+      }) ?? [],
+    [data, focusIndex, containerWidth, windowSize]
+  );
 
   const listEmptyElement = useMemo(() => {
     if (!ListEmptyComponent) return null;
@@ -162,8 +170,10 @@ export const FocusableCarousel = <ItemT extends unknown>({
         <>
           {isEmpty
             ? listEmptyElement
-            : data?.map((item, index) =>
-                viewableIndexList.includes(index) ? (
+            : data?.map((item, index) => {
+                // @ts-expect-error
+                const itemLayout = getItemLayout(data, index);
+                return viewableIndexList.includes(index) ? (
                   <Animated.View
                     key={index}
                     style={[
@@ -174,13 +184,13 @@ export const FocusableCarousel = <ItemT extends unknown>({
                             translateX: animatedValue.interpolate({
                               inputRange: [0, dataLength - 1],
                               outputRange: [
-                                itemSize.width * index,
-                                itemSize.width * -(dataLength - 1 - index),
+                                itemLayout.offset,
+                                itemLayout.length * -(dataLength - 1 - index),
                               ],
                             }),
                           },
                         ],
-                        ...itemSize,
+                        width: itemLayout.length,
                       },
                     ]}
                   >
@@ -190,16 +200,19 @@ export const FocusableCarousel = <ItemT extends unknown>({
                       focused: containerFocused && index === focusIndex,
                     })}
                   </Animated.View>
-                ) : null
-              ) ?? listEmptyElement}
+                ) : null;
+              }) ?? listEmptyElement}
           <>
             {FocusFrameComponent && (
               <View
                 style={[
                   styles.absoluteContainer,
                   {
-                    width: isEmpty ? containerWidth : itemSize.width,
-                    height: itemSize.height,
+                    width: isEmpty
+                      ? containerWidth
+                      : // @ts-expect-error
+                        getItemLayout(data, focusIndex).length,
+                    height: containerHeight,
                   },
                 ]}
                 pointerEvents="none"

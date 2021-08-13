@@ -4,16 +4,14 @@ import { ScrollView, StyleSheet } from "react-native";
 import { CommonFocusableCarousel } from "../components/CommonFocusableCarousel";
 import { Text, View } from "../components/Themed";
 
+const ITEM_SIZE = { width: 200, height: 100 };
+
 export default function TabOneScreen() {
   const data = useMemo(() => {
     let [base, max, i] = [[] as string[], 100, 0];
-    while (i < max) {
-      base.push(`${i}`);
-      i++;
-    }
+    while (i++ < max) base.push(`${i}`);
     return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
   }, []);
-  const itemSize = useMemo(() => ({ width: 200, height: 100 }), []);
   const onListElementPress = useCallback(
     (info) => console.log("onListElementPress", info),
     []
@@ -23,12 +21,17 @@ export default function TabOneScreen() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Tab One</Text>
 
-      {/* <View
+      <View
         style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
       >
         <CommonFocusableCarousel
-          itemSize={itemSize}
-          data={[]}
+          getItemLayout={(_, index) => ({
+            length: ITEM_SIZE.width,
+            offset: ITEM_SIZE.width * index,
+            index,
+          })}
+          containerHeight={ITEM_SIZE.height}
+          data={[] as typeof data}
           onListElementPress={onListElementPress}
         />
       </View>
@@ -36,34 +39,12 @@ export default function TabOneScreen() {
         style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
       >
         <CommonFocusableCarousel
-          itemSize={itemSize}
-          data={data}
-          onListElementPress={onListElementPress}
-        />
-      </View>
-      <View
-        style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
-      >
-        <CommonFocusableCarousel
-          itemSize={itemSize}
-          data={data}
-          onListElementPress={onListElementPress}
-        />
-      </View>
-      <View
-        style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
-      >
-        <CommonFocusableCarousel
-          itemSize={itemSize}
-          data={data}
-          onListElementPress={onListElementPress}
-        />
-      </View> */}
-      <View
-        style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
-      >
-        <CommonFocusableCarousel
-          itemSize={itemSize}
+          getItemLayout={(_, index) => ({
+            length: ITEM_SIZE.width,
+            offset: ITEM_SIZE.width * index,
+            index,
+          })}
+          containerHeight={ITEM_SIZE.height}
           data={data}
           onListElementPress={onListElementPress}
         />
