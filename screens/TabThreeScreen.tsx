@@ -7,8 +7,6 @@ import { Focusable } from "../components/Focusable";
 import { FocusableList, FocusableListProps } from "../components/FocusableList";
 import { FocusableView } from "../components/FocusableView";
 import { Text, View } from "../components/Themed";
-import { useNextFocus } from "../hooks/useNextFocus";
-import { useSideBarTabNavigatorFocusContext } from "../navigation/SideBarTabNavigatorFocusContext";
 
 const itemWidth = 100;
 const data = [
@@ -41,12 +39,7 @@ const data = [
 ];
 
 export default function TabThreeScreen() {
-  const { ref: lastFocusedTabRef } = useSideBarTabNavigatorFocusContext();
   const touchableRef = React.useRef<TouchableOpacity>(null);
-  useNextFocus(touchableRef, {
-    nextFocusUp: null,
-    nextFocusLeft: lastFocusedTabRef,
-  });
   const isFocused = useIsFocused();
 
   const renderItem = useCallback<FocusableListProps<string>["renderItem"]>(

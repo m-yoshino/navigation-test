@@ -9,7 +9,7 @@ import {
   TabRouterOptions,
   useNavigationBuilder,
 } from "@react-navigation/native";
-import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useEffect } from "react";
 import {
   Pressable,
@@ -22,8 +22,7 @@ import {
 import { Focusable } from "../components/Focusable";
 import { FocusableView } from "../components/FocusableView";
 import { useAnimatedValue } from "../hooks/useAnimatedValue";
-import { TVEvent, TV_EVENT_TYPE, useTVEvent } from "../hooks/useTVEvent";
-import { SidebarTabNavigatorFocusContext } from "./SideBarTabNavigatorFocusContext";
+import { useTVEvent } from "../hooks/useTVEvent";
 
 const WIDTH_EXPAND_TAB = 100; // ラベルを表示する為の追加幅
 const WIDTH_TAB_BASE = 50; // アイコンに合わせた幅
@@ -54,13 +53,6 @@ export function SideBarTabNavigator({
   );
 
   const [isFocusedTab, setFocusTabFlag] = useState(false);
-  const selectedTabRef = useRef<TouchableOpacity | null>(null);
-  const [selectedTabRefState, setSelectedTabRefState] =
-    useState<React.RefObject<TouchableOpacity | null>>(selectedTabRef);
-  useLayoutEffect(() => {
-    selectedTabRef.current = tabRef.current[state.index];
-    setSelectedTabRefState(selectedTabRef);
-  }, [state.index]);
 
   const animatedValue = useAnimatedValue();
   useEffect(() => {
@@ -72,13 +64,14 @@ export function SideBarTabNavigator({
     }).start();
   }, [isFocusedTab]);
 
-  const tvEventListener = useCallback((event: TVEvent) => {
-    switch (event.eventType) {
-      case TV_EVENT_TYPE.RIGHT: {
+  const tvEventListener = useMemo(
+    () => ({
+      right: () => {
         setFocusTabFlag(false);
-      }
-    }
-  }, []);
+      },
+    }),
+    []
+  );
   useTVEvent(tvEventListener);
 
   return (
@@ -177,23 +170,17 @@ export function SideBarTabNavigator({
             ],
           }}
         >
-          <SidebarTabNavigatorFocusContext.Provider
-            value={{ ref: selectedTabRefState, isFocusedTab }}
-          >
-            {state.routes.map((route, i) => (
-              <View
-                key={route.key}
-                style={[
-                  {
-                    flex: 1,
-                  },
-                  { display: i === state.index ? "flex" : "none" },
-                ]}
-              >
-                {descriptors[route.key].render()}
-              </View>
-            ))}
-          </SidebarTabNavigatorFocusContext.Provider>
+          {state.routes.map((route, i) => (
+            <View
+              key={route.key}
+              style={{
+                flex: 1,
+                display: i === state.index ? "flex" : "none",
+              }}
+            >
+              {descriptors[route.key].render()}
+            </View>
+          ))}
         </Animated.View>
       </View>
     </NavigationHelpersContext.Provider>

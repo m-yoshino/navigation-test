@@ -5,16 +5,9 @@ import EditScreenInfo from "../components/EditScreenInfo";
 import { Focusable } from "../components/Focusable";
 import { FocusableView } from "../components/FocusableView";
 import { Text, View } from "../components/Themed";
-import { useNextFocus } from "../hooks/useNextFocus";
-import { useSideBarTabNavigatorFocusContext } from "../navigation/SideBarTabNavigatorFocusContext";
 
 export default function TabTwoScreen() {
-  const lastFocusedTabRef = useSideBarTabNavigatorFocusContext();
   const touchableRef = React.useRef<TouchableOpacity>(null);
-  useNextFocus(touchableRef, {
-    nextFocusUp: null,
-    nextFocusLeft: lastFocusedTabRef?.ref,
-  });
   const isFocused = useIsFocused();
   return (
     <View style={styles.container}>
