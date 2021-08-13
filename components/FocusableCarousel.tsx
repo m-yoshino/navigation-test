@@ -21,16 +21,7 @@ const DEFAULT_ANIMATION_CONFIG = {
 
 export interface FocusableCarouselProps<ItemT>
   extends Pick<FlatListProps<ItemT>, "data" | "ListEmptyComponent"> {
-  nextFocusRight?: FocusableRef;
-  nextFocusLeft?: FocusableRef;
-  nextFocusUp?: FocusableRef;
-  nextFocusDown?: FocusableRef;
-
-  FocusFrameComponent?: React.ComponentType<{ focused: boolean }>;
-
   containerHeight: number;
-
-  windowSize?: number;
 
   getItemLayout: NonNullable<FlatListProps<ItemT>["getItemLayout"]>;
 
@@ -43,6 +34,12 @@ export interface FocusableCarouselProps<ItemT>
   ) => void;
 
   animationConfig?: Pick<Animated.TimingAnimationConfig, "duration" | "easing">;
+  windowSize?: number;
+  nextFocusRight?: FocusableRef;
+  nextFocusLeft?: FocusableRef;
+  nextFocusUp?: FocusableRef;
+  nextFocusDown?: FocusableRef;
+  FocusFrameComponent?: React.ComponentType<{ focused: boolean }>;
 }
 
 export const FocusableCarousel = <ItemT extends unknown>({
@@ -209,7 +206,7 @@ export const FocusableCarousel = <ItemT extends unknown>({
                   styles.absoluteContainer,
                   {
                     width: isEmpty
-                      ? containerWidth
+                      ? "100%"
                       : // @ts-expect-error
                         getItemLayout(data, focusIndex).length,
                     height: containerHeight,
