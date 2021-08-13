@@ -5,7 +5,14 @@ import { CommonFocusableCarousel } from "../components/CommonFocusableCarousel";
 import { Text, View } from "../components/Themed";
 
 export default function TabOneScreen() {
-  const data = useMemo(() => ["001", "002", "003", "004", "005", "006"], []);
+  const data = useMemo(() => {
+    let [base, max, i] = [[] as string[], 100, 0];
+    while (i < max) {
+      base.push(`${i}`);
+      i++;
+    }
+    return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
+  }, []);
   const itemSize = useMemo(() => ({ width: 200, height: 100 }), []);
   const onListElementPress = useCallback(
     (info) => console.log("onListElementPress", info),
@@ -16,12 +23,12 @@ export default function TabOneScreen() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Tab One</Text>
 
-      <View
+      {/* <View
         style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
       >
         <CommonFocusableCarousel
           itemSize={itemSize}
-          data={data}
+          data={[]}
           onListElementPress={onListElementPress}
         />
       </View>
@@ -51,7 +58,7 @@ export default function TabOneScreen() {
           data={data}
           onListElementPress={onListElementPress}
         />
-      </View>
+      </View> */}
       <View
         style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
       >

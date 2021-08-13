@@ -2,11 +2,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { useEffect } from "react";
 import { Easing } from "react-native";
 import { Animated, View, StyleSheet } from "react-native";
-import type {
-  FlatListProps,
-  ListRenderItemInfo,
-  ViewStyle,
-} from "react-native";
+import type { FlatListProps, ListRenderItemInfo } from "react-native";
 import type { FocusableRef } from "../@types/tvos";
 import { useAnimatedValue } from "../hooks/useAnimatedValue";
 import { useFocusableRef } from "../hooks/useFocusableRef";
@@ -15,6 +11,9 @@ import { useTVEvent } from "../hooks/useTVEvent";
 import type { TVEventListener } from "../hooks/useTVEvent";
 import { forceFocus } from "../util/forceFocus";
 import { Focusable } from "./Focusable";
+import { useLayout } from "../hooks/useLayout";
+
+const DEFAULT_WINDOW_SIZE = 3;
 
 export interface FocusableCarouselProps<ItemT>
   extends Pick<FlatListProps<ItemT>, "data" | "ListEmptyComponent"> {
@@ -27,6 +26,8 @@ export interface FocusableCarouselProps<ItemT>
   animationConfig?: Pick<Animated.TimingAnimationConfig, "duration" | "easing">;
 
   FocusFrameComponent?: React.ComponentType<{ focused: boolean }>;
+
+  windowSize?: number;
 
   renderItem: (
     info: Omit<ListRenderItemInfo<ItemT>, "separators"> & { focused: boolean }
@@ -49,8 +50,10 @@ export const FocusableCarousel = <ItemT extends unknown>({
   animationConfig,
   FocusFrameComponent,
   ListEmptyComponent,
+  windowSize = DEFAULT_WINDOW_SIZE,
 }: FocusableCarouselProps<ItemT>) => {
   const dataLength = data?.length ?? 0;
+  const isEmpty = dataLength === 0;
 
   const [focusIndex, setFocusIndex] = useState(0);
   const [containerFocused, setContainerFocused] = useState(false);
@@ -109,23 +112,43 @@ export const FocusableCarousel = <ItemT extends unknown>({
     [itemSize.height]
   );
 
-  const itemsContainerStyle = useMemo<Animated.WithAnimatedArray<ViewStyle>>(
-    () => [
-      styles.absoluteContainer,
-      {
-        flexDirection: "row",
-        transform: [
-          {
-            translateX: animatedValue.interpolate({
-              inputRange: [0, dataLength - 1],
-              outputRange: [0, -1 * (dataLength - 1) * itemSize.width],
-            }),
-          },
-        ],
-      },
-    ],
-    [animatedValue, dataLength, itemSize.width]
-  );
+  const { width: containerWidth, onLayout: onLayoutContainer } = useLayout();
+
+  const viewableIndexList = useMemo(() => {
+    return (
+      data?.flatMap((_, index) => {
+        const itemWidth = itemSize.width;
+
+        const itemBegin = index * itemWidth;
+        const itemEnd = itemBegin + itemWidth;
+
+        const adjustOffset = ((windowSize - 1) * containerWidth) / 2;
+
+        const _containerBegin = focusIndex * itemWidth;
+        const _containerEnd = _containerBegin + containerWidth;
+
+        const containerBegin = _containerBegin - adjustOffset;
+        const containerEnd = _containerEnd + adjustOffset;
+
+        // prettier-ignore
+        const canRenderTheBeginning = containerBegin <= itemBegin && itemBegin <= containerEnd;
+        // prettier-ignore
+        const canRenderTheEnd = containerBegin <= itemEnd && itemEnd <= containerEnd;
+
+        return canRenderTheBeginning && canRenderTheEnd ? [index] : [];
+      }) ?? []
+    );
+  }, [data, itemSize, focusIndex, containerWidth, windowSize]);
+
+  const listEmptyElement = useMemo(() => {
+    if (!ListEmptyComponent) return null;
+    return React.isValidElement(ListEmptyComponent) ? (
+      ListEmptyComponent
+    ) : (
+      // @ts-expect-error
+      <ListEmptyComponent />
+    );
+  }, [ListEmptyComponent]);
 
   return (
     <Focusable
@@ -133,30 +156,58 @@ export const FocusableCarousel = <ItemT extends unknown>({
       onBlur={onContainerBlured}
       onFocus={onContainerFocused}
       style={containerStyle}
+      onLayout={onLayoutContainer}
     >
       {(focused) => (
         <>
-          <Animated.View style={itemsContainerStyle}>
-            {dataLength === 0
-              ? ListEmptyComponent
-              : data?.map((item, index) => (
-                  <View key={index} style={itemSize}>
+          {isEmpty
+            ? listEmptyElement
+            : data?.map((item, index) =>
+                viewableIndexList.includes(index) ? (
+                  <Animated.View
+                    key={index}
+                    style={[
+                      styles.absoluteContainer,
+                      {
+                        transform: [
+                          {
+                            translateX: animatedValue.interpolate({
+                              inputRange: [0, dataLength - 1],
+                              outputRange: [
+                                itemSize.width * index,
+                                itemSize.width * -(dataLength - 1 - index),
+                              ],
+                            }),
+                          },
+                        ],
+                        ...itemSize,
+                      },
+                    ]}
+                  >
                     {renderItem({
                       item,
                       index,
                       focused: containerFocused && index === focusIndex,
                     })}
-                  </View>
-                )) ?? ListEmptyComponent}
-          </Animated.View>
-          {FocusFrameComponent && (
-            <View
-              style={[styles.absoluteContainer, itemSize]}
-              pointerEvents="none"
-            >
-              <FocusFrameComponent focused={focused} />
-            </View>
-          )}
+                  </Animated.View>
+                ) : null
+              ) ?? listEmptyElement}
+          <>
+            {FocusFrameComponent && (
+              <View
+                style={[
+                  styles.absoluteContainer,
+                  {
+                    width: isEmpty ? containerWidth : itemSize.width,
+                    height: itemSize.height,
+                  },
+                ]}
+                pointerEvents="none"
+              >
+                <FocusFrameComponent focused={focused} />
+              </View>
+            )}
+          </>
         </>
       )}
     </Focusable>

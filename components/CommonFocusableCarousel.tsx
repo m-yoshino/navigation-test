@@ -53,39 +53,50 @@ export const CommonFocusableCarousel = <ItemT extends unknown>({
 }: Omit<
   FocusableCarouselProps<ItemT>,
   "renderItem" | "FocusFrameComponent"
->) => {
-  return (
-    <FocusableCarousel
-      {...rest}
-      itemSize={itemSize}
-      renderItem={({ item, focused }) => (
+>) => (
+  <FocusableCarousel
+    {...rest}
+    itemSize={itemSize}
+    renderItem={({ item, focused }) => (
+      <View
+        style={{
+          width: 200,
+          height: 100,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "transparent",
+        }}
+      >
+        <FocusableCarouselItem item={item} focused={focused} />
+      </View>
+    )}
+    ListEmptyComponent={() => (
+      <View
+        style={{
+          paddingLeft: 16,
+          width: "100%",
+          height: "100%",
+          alignItems: "flex-start",
+          justifyContent: "center",
+          backgroundColor: "transparent",
+        }}
+      >
+        <Text style={{ color: "white" }}>データがありません</Text>
+      </View>
+    )}
+    FocusFrameComponent={({ focused }) =>
+      focused ? (
         <View
           style={{
-            width: 200,
-            height: 100,
-            alignItems: "center",
-            justifyContent: "center",
+            width: "100%",
+            height: "100%",
+            borderWidth: 2,
+            borderColor: "white",
+            borderRadius: 4,
             backgroundColor: "transparent",
           }}
-        >
-          <FocusableCarouselItem item={item} focused={focused} />
-        </View>
-      )}
-      FocusFrameComponent={({ focused }) =>
-        focused ? (
-          <View
-            style={{
-              transform: [{ translateX: -6 }, { translateY: -6 }],
-              width: itemSize.width + 12,
-              height: itemSize.height + 12,
-              borderWidth: 2,
-              borderColor: "white",
-              borderRadius: 4,
-              backgroundColor: "transparent",
-            }}
-          />
-        ) : null
-      }
-    />
-  );
-};
+        />
+      ) : null
+    }
+  />
+);
