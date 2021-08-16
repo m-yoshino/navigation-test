@@ -1,11 +1,12 @@
-import React, { useCallback } from "react";
-import { View, Text } from "react-native";
+import React, { useCallback, useState } from "react";
+import { View } from "react-native";
 import { Focusable } from "../Focusable";
 import {
   KEY_LABEL_SIZE,
   KEY_MARGIN_SIZE,
   SPECIAL_KEY_LABEL,
 } from "./constants";
+import { FocusableKeyboardInputFieldView } from "./FocusableKeyboardInputView";
 import { KeyLabel, KeyLabelView } from "./KeyLabel";
 import {
   convertDakuten,
@@ -28,40 +29,66 @@ const INPUT_KEY_LABEL_LIST: string[][] = [
 ];
 
 export const FocusableKeyboardView: React.FC<{
-  value: string;
-  onChangeText: (callback: (value: string) => string) => void;
   children?: never;
-}> = ({ value, onChangeText }) => {
+}> = () => {
+  const [value, setValue] = useState("");
+  const [transliterateValue, setTransliterateValue] = useState(value);
+  const onChangeText = useCallback((callback: (str: string) => string) => {
+    setTransliterateValue(callback);
+  }, []);
+  const onSelectTransliterate = useCallback((transliterate: string) => {
+    // TODO: useReducerに移行する
+    setValue((s) => `${s}${transliterate}`);
+    setTransliterateValue("");
+  }, []);
+
   const onKeyPress = useCallback(
     (label: string) => {
-      if (label === SPECIAL_KEY_LABEL.KOMOJI) {
-        onChangeText((value) => convertTailChar(value, convertKomoji));
-        return;
+      switch (label) {
+        case SPECIAL_KEY_LABEL.KOMOJI: {
+          setTransliterateValue((value) =>
+            convertTailChar(value, convertKomoji)
+          );
+          break;
+        }
+        case SPECIAL_KEY_LABEL.DAKUTEN: {
+          setTransliterateValue((value) =>
+            convertTailChar(value, convertDakuten)
+          );
+          break;
+        }
+        case SPECIAL_KEY_LABEL.HANDAKUTEN: {
+          setTransliterateValue((value) =>
+            convertTailChar(value, convertHandakuten)
+          );
+          break;
+        }
+        default: {
+          setTransliterateValue((value) => value + label);
+        }
       }
-      if (label === SPECIAL_KEY_LABEL.DAKUTEN) {
-        onChangeText((value) => convertTailChar(value, convertDakuten));
-        return;
-      }
-      if (label === SPECIAL_KEY_LABEL.HANDAKUTEN) {
-        onChangeText((value) => convertTailChar(value, convertHandakuten));
-        return;
-      }
-      onChangeText((value) => value + label);
     },
     [onChangeText]
   );
 
   const onPressSpace = useCallback(() => {
-    onChangeText((value) => value + " ");
+    if (transliterateValue.trim() !== "") {
+      setTransliterateValue((value) => value + " ");
+    } else {
+      setValue((value) => value + " ");
+    }
   }, [onChangeText]);
 
   const onPressDelete = useCallback(() => {
-    onChangeText((value) => convertTailChar(value, (_) => ""));
-  }, [onChangeText]);
+    if (transliterateValue.trim() !== "") {
+      setTransliterateValue((value) => convertTailChar(value, (_) => ""));
+    } else {
+      setValue((value) => convertTailChar(value, (_) => ""));
+    }
+  }, [transliterateValue]);
 
   return (
-    <View>
-      <Text>{value}</Text>
+    <View style={{ flexDirection: "row" }}>
       <View>
         {INPUT_KEY_LABEL_LIST.map((row, index) => (
           <View key={index} style={{ flexDirection: "row" }}>
@@ -129,6 +156,13 @@ export const FocusableKeyboardView: React.FC<{
             )}
           </Focusable>
         </View>
+      </View>
+      <View style={{ paddingLeft: 20 }}>
+        <FocusableKeyboardInputFieldView
+          value={value}
+          transliterateValue={transliterateValue}
+          onSelectTransliterate={onSelectTransliterate}
+        />
       </View>
     </View>
   );

@@ -1,17 +1,12 @@
 import * as React from "react";
-import { useCallback, useState } from "react";
 import { StyleSheet } from "react-native";
 import { FocusableKeyboardView } from "../components/FocusableKeyboardView";
-import { Text, View } from "../components/Themed";
+import { View } from "../components/Themed";
 
 export default function TabTwoScreen() {
-  const [inputText, setInputText] = useState("");
-  const onChangeText = useCallback((callback: (str: string) => string) => {
-    setInputText(callback);
-  }, []);
   return (
     <View style={styles.container}>
-      <FocusableKeyboardView value={inputText} onChangeText={onChangeText} />
+      <FocusableKeyboardView />
     </View>
   );
 }
@@ -19,7 +14,8 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    paddingLeft: 40,
+    alignItems: "flex-start",
     justifyContent: "center",
   },
   title: {

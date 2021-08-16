@@ -1,0 +1,1 @@
+export type TransliterateResult = [string, string[]][];
