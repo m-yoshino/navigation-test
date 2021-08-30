@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useMemo } from "react";
 import { useRef } from "react";
 import { ListRenderItemInfo, TouchableOpacity } from "react-native";
 import { FlatList, FlatListProps } from "react-native";
-import type { FocusableRef } from "../@types/tvos";
+import type { FocusableComponent, FocusableRefObject } from "../@types/tvos";
+import { useFocusableRef } from "../hooks/useFocusableRef";
 import { useNextFocus } from "../hooks/useNextFocus";
+import { useOnRef } from "../hooks/useOnRef";
 import { forceFocus } from "../util/forceFocus";
 import { Focusable, FocusableProps } from "./Focusable";
 
@@ -12,24 +14,24 @@ export interface FocusableListProps<ItemT>
   listRef?: React.RefObject<FlatList>;
 
   onListElementFocus?: (
-    element: FocusableRef,
+    element: FocusableRefObject,
     info: ListRenderItemInfo<ItemT>
   ) => void;
   onListElementBlur?: (
-    element: FocusableRef,
+    element: FocusableRefObject,
     info: ListRenderItemInfo<ItemT>
   ) => void;
   onListElementPress?: (
-    element: FocusableRef,
+    element: FocusableRefObject,
     info: ListRenderItemInfo<ItemT>
   ) => void;
 
   focusableItemProps?: Partial<FocusableProps>;
 
-  nextFocusRight?: FocusableRef;
-  nextFocusLeft?: FocusableRef;
-  nextFocusUp?: FocusableRef;
-  nextFocusDown?: FocusableRef;
+  nextFocusRight?: FocusableRefObject;
+  nextFocusLeft?: FocusableRefObject;
+  nextFocusUp?: FocusableRefObject;
+  nextFocusDown?: FocusableRefObject;
 
   renderItem: (
     info: ListRenderItemInfo<ItemT> & { focused: boolean }
@@ -158,14 +160,15 @@ const FocusableListItem = <ItemT extends unknown>({
     isHorizontal: boolean;
     dataLength: number;
   } & FocusableProps) => {
-  const selfRef = useRef<TouchableOpacity | null>(null);
-  const onRef = useCallback(
-    (ref: TouchableOpacity) => {
-      selfRef.current = ref;
-      onItemRef(ref, index);
+  const selfRef = useFocusableRef();
+
+  const onRefWithIndex = useCallback(
+    (ref: FocusableComponent | null) => {
+      ref && onItemRef(ref, index);
     },
-    [onItemRef]
+    [onItemRef, index]
   );
+  const onRef = useOnRef(selfRef, onRefWithIndex);
 
   const onFocus = useCallback(
     () => onListElementFocus?.(selfRef, { index, item, separators }),

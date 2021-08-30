@@ -1,4 +1,7 @@
 import React from "react";
-import type {TouchableOpacity} from "react-native";
+import type {TouchableOpacity, TouchableOpacityProps} from "react-native";
 
-export type FocusableRef = React.RefObject<TouchableOpacity>;
+export type FocusableComponent = TouchableOpacity;
+export type FocusableComponentProps = TouchableOpacityProps;
+export type FocusableRefObject = React.RefObject<TouchableOpacity>;
+export type FocusableRef = FocusableRefObject | ((instance: FocusableComponent | null) => void);
