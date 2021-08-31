@@ -2,8 +2,7 @@ import * as React from "react";
 import { useCallback, useMemo } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { FakeCarousel } from "../components/FakeCarousel";
-import { FocusableCarousel } from "../components/FocusableCarousel";
-import { FocusableCarouselProps } from "../components/FocusableCarousel/types";
+import type { FakeCarouselProps } from "../components/FakeCarousel/types";
 import { Text, View } from "../components/Themed";
 
 const ITEM_SIZE = { width: 200, height: 100 };
@@ -13,15 +12,14 @@ export default function TabOneScreen() {
     // let [base, max, i] = [[] as string[], 10, 0];
     // while (i++ < max) base.push(`${i}`);
     // return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
-    return ["0", "1", "2", "3", "4"];
+    return ["0", "1", "2"];
   }, []);
 
-  const onSelectElement = useCallback(
-    (info) => console.log("onSelectElement", info),
-    []
-  );
+  const onSelectElement = useCallback<
+    NonNullable<FakeCarouselProps<string>["onSelectElement"]>
+  >((item) => console.log("onSelectElement", item), []);
 
-  const renderItem = useCallback<FocusableCarouselProps<string>["renderItem"]>(
+  const renderItem = useCallback<FakeCarouselProps<string>["renderItem"]>(
     ({ item }) => (
       <View
         style={{
@@ -38,9 +36,10 @@ export default function TabOneScreen() {
     []
   );
 
-  const keyExtractor = useCallback<
-    FocusableCarouselProps<string>["keyExtractor"]
-  >((item) => item, []);
+  const keyExtractor = useCallback<FakeCarouselProps<string>["keyExtractor"]>(
+    (item) => item,
+    []
+  );
 
   return (
     <ScrollView style={styles.container}>
@@ -49,12 +48,6 @@ export default function TabOneScreen() {
       <View
         style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
       >
-        {/* <FocusableCarousel
-          data={data}
-          itemSize={ITEM_SIZE}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-        /> */}
         <FakeCarousel
           data={data}
           itemSize={ITEM_SIZE}
