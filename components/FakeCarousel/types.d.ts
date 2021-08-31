@@ -11,3 +11,9 @@ export type FakeCarouselProps<T> = {
   indexOffset?: number;
   nextFocusLeft?: FocusableRefObject;
 };
+
+export type FakeCarouselRenderableItem<T> = {
+  item: T;
+  index: number;
+  baseIndex: number;
+};

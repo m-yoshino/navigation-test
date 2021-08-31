@@ -1,29 +1,22 @@
-import type { FocusableComponent, FocusableRef } from "../../@types/tvos";
-import { Focusable } from "../Focusable";
-import { useBool } from "../../hooks/useBool";
-import { useFocusableRef } from "../../hooks/useFocusableRef";
-import { useNextFocus } from "../../hooks/useNextFocus";
-import { useOnRef } from "../../hooks/useOnRef";
-import { useTVEvent } from "../../hooks/useTVEvent";
 import React, {
   useCallback,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  useEffect,
 } from "react";
-import { Animated, View } from "react-native";
-import type { FakeCarouselProps as FakeCarouselProps } from "./types";
+import { Animated, View, Easing } from "react-native";
+import { Focusable } from "../Focusable";
+import { useBool } from "../../hooks/useBool";
+import { useFocusableRef } from "../../hooks/useFocusableRef";
+import { useNextFocus } from "../../hooks/useNextFocus";
+import { useOnRef } from "../../hooks/useOnRef";
+import { useTVEvent } from "../../hooks/useTVEvent";
 import { useAnimatedValue } from "../../hooks/useAnimatedValue";
 import { useLayout } from "../../hooks/useLayout";
-import { useEffect } from "react";
-import { Easing } from "react-native";
-
-type DisplayItem<T> = {
-  item: T;
-  index: number;
-  baseIndex: number;
-};
+import type { FocusableComponent, FocusableRef } from "../../@types/tvos";
+import type { FakeCarouselProps, FakeCarouselRenderableItem } from "./types";
 
 const isIndexInBaseArray = <T extends unknown>(
   index: number,
@@ -100,7 +93,7 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
   );
 
   const [renderableItems, setRenderableItems] = useState<{
-    items: DisplayItem<T>[];
+    items: FakeCarouselRenderableItem<T>[];
     shifted: number;
   }>({
     items: [],
@@ -243,15 +236,10 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
             }}
           >
             {renderableItems.items.map(({ item, baseIndex }, i) => {
-              const animatedBaseIndex =
-                i - indexOffset + renderableItems.shifted;
+              const animatedIndex = i - indexOffset + renderableItems.shifted;
+              const key = `${keyExtractor(item)}_${i}`;
               return (
-                <Animated.View
-                  key={`${keyExtractor(item)}_${i}`}
-                  style={{
-                    ...itemSize,
-                  }}
-                >
+                <Animated.View key={key} style={itemSize}>
                   {renderItem({
                     item,
                     index: baseIndex,
@@ -260,9 +248,9 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
                       itemSize.width
                     ).interpolate({
                       inputRange: [
-                        animatedBaseIndex - 1,
-                        animatedBaseIndex,
-                        animatedBaseIndex + 1,
+                        animatedIndex - 1,
+                        animatedIndex,
+                        animatedIndex + 1,
                       ],
                       outputRange: [0, 1, 0],
                       extrapolate: "clamp",
