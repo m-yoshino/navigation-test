@@ -5,7 +5,7 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { Animated, View, Easing } from "react-native";
+import { Animated, View, Easing, ViewProps } from "react-native";
 import { Focusable } from "../Focusable";
 import { useBool } from "../../hooks/useBool";
 import { useFocusableRef } from "../../hooks/useFocusableRef";
@@ -72,10 +72,19 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
     onSelectElement,
     onFocus: propsOnFocus,
     onBlur: propsOnBlur,
+    align = "flex-start",
+    onLayout,
   }: FakeCarouselProps<T>,
   ref: FocusableRef | null
 ) {
-  const { width: containerWidth, onLayout: onLayoutContainer } = useLayout();
+  const { width: containerWidth, onLayout: _onLayoutContainer } = useLayout();
+  const onLayoutContainer = useCallback<NonNullable<ViewProps["onLayout"]>>(
+    (event) => {
+      _onLayoutContainer(event);
+      onLayout?.(event);
+    },
+    [_onLayoutContainer, onLayout]
+  );
   const selfRef = useFocusableRef();
   const onRef = useOnRef(selfRef, ref);
   const scrollAnimatedValue = useAnimatedValue();
@@ -241,9 +250,16 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
               {
                 translateX: Animated.multiply(
                   -1,
-                  Animated.add(
-                    scrollAnimatedValue,
-                    (indexOffset - renderableItems.shifted) * itemSize.width
+                  Animated.subtract(
+                    Animated.add(
+                      scrollAnimatedValue,
+                      (indexOffset - renderableItems.shifted) * itemSize.width
+                    ),
+                    align === "flex-start"
+                      ? 0
+                      : align === "center"
+                      ? containerWidth / 2 - itemSize.width / 2
+                      : 0
                   )
                 ),
               },

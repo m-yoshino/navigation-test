@@ -6,8 +6,9 @@ import type { FakeCarouselProps } from "../components/FakeCarousel/types";
 import { Text, View } from "../components/Themed";
 import { useBool } from "../hooks/useBool";
 import sampleImage from "../assets/images/sample.png";
+import { useLayout } from "../hooks/useLayout";
 
-const ITEM_SIZE = { width: 200, height: 100 };
+const ITEM_SIZE = { width: 600, height: 300 };
 
 export default function TabOneScreen() {
   const data = useMemo(() => {
@@ -80,6 +81,7 @@ export default function TabOneScreen() {
   );
 
   const { bool: focused, setTrue: onFocus, setFalse: onBlur } = useBool(false);
+  const { width: containerWidth, onLayout: onContainerLayout } = useLayout();
 
   return (
     <ScrollView style={styles.container}>
@@ -94,6 +96,7 @@ export default function TabOneScreen() {
           }}
         >
           <FakeCarousel
+            onLayout={onContainerLayout}
             data={data}
             itemSize={ITEM_SIZE}
             renderItem={renderItem}
@@ -101,13 +104,14 @@ export default function TabOneScreen() {
             onSelectElement={onSelectElement}
             onFocus={onFocus}
             onBlur={onBlur}
+            align="center"
           />
           {focused && (
             <View
               style={{
                 position: "absolute",
                 top: -4,
-                left: -4,
+                left: -4 + containerWidth / 2 - ITEM_SIZE.width / 2,
                 width: ITEM_SIZE.width + 8,
                 height: ITEM_SIZE.height + 8,
                 borderRadius: 10,
