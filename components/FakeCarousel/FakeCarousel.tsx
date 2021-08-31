@@ -47,7 +47,7 @@ const getBaseIndex = <T extends unknown>(
 const createRenderableItemsFromData = <T extends unknown>(
   currentIndex: number,
   renderableCount: number,
-  indexOffset: number = 2,
+  indexOffset: number,
   data: T[]
 ) => {
   return Array.from({ length: renderableCount }).map((_, i) => {

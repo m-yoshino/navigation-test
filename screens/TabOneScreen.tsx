@@ -1,10 +1,11 @@
 import * as React from "react";
 import { useCallback, useMemo } from "react";
-import { Animated, ScrollView, StyleSheet } from "react-native";
+import { Animated, ScrollView, StyleSheet, Image } from "react-native";
 import { FakeCarousel } from "../components/FakeCarousel";
 import type { FakeCarouselProps } from "../components/FakeCarousel/types";
 import { Text, View } from "../components/Themed";
 import { useBool } from "../hooks/useBool";
+import sampleImage from "../assets/images/sample.png";
 
 const ITEM_SIZE = { width: 200, height: 100 };
 
@@ -28,6 +29,7 @@ export default function TabOneScreen() {
           borderRadius: 8,
           alignItems: "center",
           justifyContent: "center",
+          overflow: "hidden",
           opacity: animated.interpolate({
             inputRange: [0, 1],
             outputRange: [0.5, 1],
@@ -44,7 +46,29 @@ export default function TabOneScreen() {
           ],
         }}
       >
-        <Text>{item}</Text>
+        <Animated.Image
+          source={sampleImage}
+          style={ITEM_SIZE}
+          blurRadius={animated.interpolate({
+            inputRange: [0, 1],
+            outputRange: [2, 0],
+            extrapolate: "clamp",
+          })}
+        />
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "transparent",
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "bold" }}>{item}</Text>
+        </View>
       </Animated.View>
     ),
     []
@@ -82,7 +106,11 @@ export default function TabOneScreen() {
             <View
               style={{
                 position: "absolute",
-                ...ITEM_SIZE,
+                top: -4,
+                left: -4,
+                width: ITEM_SIZE.width + 8,
+                height: ITEM_SIZE.height + 8,
+                borderRadius: 10,
                 borderWidth: 2,
                 borderColor: "white",
                 backgroundColor: "transparent",
