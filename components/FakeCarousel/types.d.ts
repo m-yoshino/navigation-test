@@ -6,5 +6,6 @@ export type FakeCarouselProps<T> = {
   itemSize: { width: number; height: number };
   renderItem: (info: { item: T; index: number }) => React.ReactNode;
   keyExtractor: (item: T) => string;
+  onSelectElement?: (item: T) => void;
   nextFocusLeft?: FocusableRefObject;
 };

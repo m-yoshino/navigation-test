@@ -17,7 +17,7 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
   props: FakeCarouselProps<T>,
   ref: FocusableRef | null
 ) {
-  const { data, itemSize, keyExtractor, renderItem } = props;
+  const { data, itemSize, onSelectElement, keyExtractor, renderItem } = props;
   const { width: containerWidth, onLayout: onLayoutContainer } = useLayout();
   const selfRef = useFocusableRef();
   const onRef = useOnRef(selfRef, ref);
@@ -73,7 +73,6 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
   const onScrollEnd = useCallback(() => {
     scrollEndTimer.current = null;
     isScrolling.current = false;
-    console.log("onScrollEnd");
   }, []);
 
   useEffect(() => {
@@ -118,10 +117,13 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
         console.log("tvEventListener#left()", { currentIndex });
       },
       select: () => {
-        console.log("FocusableCarousel#onSelect()");
+        const currentIndex = getIndex(lastScrollPosition.current);
+        const item = data[currentIndex];
+        console.log("FocusableCarousel#onSelect()", { currentIndex, item });
+        onSelectElement?.(item);
       },
     }),
-    [getIndex, scrollToIndex]
+    [getIndex, scrollToIndex, onSelectElement, data]
   );
   useTVEvent(tvEventListener, !isFocusedContainer);
 

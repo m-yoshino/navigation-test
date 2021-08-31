@@ -16,8 +16,8 @@ export default function TabOneScreen() {
     return ["0", "1", "2", "3", "4"];
   }, []);
 
-  const onListElementPress = useCallback(
-    (info) => console.log("onListElementPress", info),
+  const onSelectElement = useCallback(
+    (info) => console.log("onSelectElement", info),
     []
   );
 
@@ -60,6 +60,7 @@ export default function TabOneScreen() {
           itemSize={ITEM_SIZE}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
+          onSelectElement={onSelectElement}
         />
       </View>
     </ScrollView>
