@@ -12,7 +12,7 @@ export default function TabOneScreen() {
     // let [base, max, i] = [[] as string[], 10, 0];
     // while (i++ < max) base.push(`${i}`);
     // return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
-    return ["0", "1", "2"];
+    return ["0", "1", "2", "3"];
   }, []);
 
   const onSelectElement = useCallback<

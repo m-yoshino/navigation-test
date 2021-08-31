@@ -13,11 +13,54 @@ import { useLayout } from "../../hooks/useLayout";
 import { useEffect } from "react";
 import { Easing } from "react-native";
 
+type DisplayItem<T> = {
+  item: T;
+  index: number;
+  baseIndex: number;
+};
+
+const INDEX_OFFSET = 2;
+
+const getBaseIndex = <T extends unknown>(
+  index: number,
+  baseArray: T[]
+): number => {
+  if (0 <= index && index < baseArray.length) {
+    return index;
+  }
+  if (index < 0) {
+    return getBaseIndex<T>(baseArray.length + index, baseArray);
+  }
+  return getBaseIndex<T>(index - baseArray.length, baseArray);
+};
+
+const createRenderableItemsFromData = <T extends unknown>(
+  currentIndex: number,
+  renderableCount: number,
+  indexOffset: number = 2,
+  data: T[]
+) => {
+  return Array.from({ length: renderableCount }).map((_, i) => {
+    const index = i + currentIndex - indexOffset;
+    const baseIndex = getBaseIndex(index, data);
+    return {
+      item: data[baseIndex],
+      index,
+      baseIndex,
+    };
+  });
+};
+
 export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
-  props: FakeCarouselProps<T>,
+  {
+    data,
+    itemSize,
+    onSelectElement,
+    keyExtractor,
+    renderItem,
+  }: FakeCarouselProps<T>,
   ref: FocusableRef | null
 ) {
-  const { data, itemSize, onSelectElement, keyExtractor, renderItem } = props;
   const { width: containerWidth, onLayout: onLayoutContainer } = useLayout();
   const selfRef = useFocusableRef();
   const onRef = useOnRef(selfRef, ref);
@@ -27,9 +70,11 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
     offset: number;
     animated: boolean;
   }>({ offset: 0, animated: false });
-
   const isScrolling = useRef<boolean>(false);
   const scrollEndTimer = useRef<NodeJS.Timeout | null>(null);
+  const renderableCount = useMemo(() => {
+    return Math.ceil(containerWidth / itemSize.width) + INDEX_OFFSET * 2;
+  }, [containerWidth, itemSize.width]);
 
   const getIndex = useCallback(
     (scrollPosition: number, round: boolean = false) => {
@@ -37,14 +82,39 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
       const itemIndex = Number(
         (scrollPosition / itemSize.width).toFixed(toFixedFractionDigits)
       );
-      if (round) {
-        return Math.round(itemIndex);
-      } else {
-        return itemIndex;
-      }
+      return round ? Math.round(itemIndex) : itemIndex;
     },
     [itemSize.width]
   );
+
+  const [renderableItems, setRenderableItems] = useState<{
+    items: DisplayItem<T>[];
+    shifted: number;
+  }>({
+    items: [],
+    shifted: 0,
+  });
+
+  const updateRenderableItems = useCallback(() => {
+    const currentIndex = getIndex(lastScrollPosition.current);
+    const newRenderableItem = createRenderableItemsFromData(
+      currentIndex,
+      renderableCount,
+      INDEX_OFFSET,
+      data
+    );
+    setRenderableItems({ items: newRenderableItem, shifted: currentIndex });
+  }, [getIndex, renderableCount, data]);
+
+  useEffect(() => {
+    updateRenderableItems();
+  }, [updateRenderableItems]);
+
+  // console.log({
+  //   renderableCount,
+  //   renderableItems,
+  //   currentIndex: getIndex(lastScrollPosition.current),
+  // });
 
   const {
     bool: isFocusedContainer,
@@ -60,7 +130,6 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
       isScrolling.current = true;
 
       const x = index * itemSize.width;
-      console.log("scrollToIndex", { index, x });
       if (lastScrollPosition.current === x) {
         isScrolling.current = false;
         return;
@@ -73,7 +142,8 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
   const onScrollEnd = useCallback(() => {
     scrollEndTimer.current = null;
     isScrolling.current = false;
-  }, []);
+    updateRenderableItems();
+  }, [updateRenderableItems]);
 
   useEffect(() => {
     const listenerID = scrollAnimatedValue.addListener(({ value }) => {
@@ -87,6 +157,9 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
     });
     return () => {
       scrollAnimatedValue.removeListener(listenerID);
+      if (scrollEndTimer.current !== null) {
+        clearTimeout(scrollEndTimer.current);
+      }
     };
   }, [scrollAnimatedValue, onScrollEnd]);
 
@@ -102,7 +175,7 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
     } else {
       scrollAnimatedValue.setValue(scrollOffset.offset);
     }
-  }, [scrollOffset]);
+  }, [scrollAnimatedValue, scrollOffset]);
 
   const tvEventListener = useMemo(
     () => ({
@@ -118,8 +191,13 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
       },
       select: () => {
         const currentIndex = getIndex(lastScrollPosition.current);
-        const item = data[currentIndex];
-        console.log("FocusableCarousel#onSelect()", { currentIndex, item });
+        const index = getBaseIndex(currentIndex, data);
+        const item = data[index];
+        console.log("FocusableCarousel#onSelect()", {
+          index,
+          currentIndex,
+          item,
+        });
         onSelectElement?.(item);
       },
     }),
@@ -138,6 +216,7 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
       onFocus={onFocus}
       onBlur={onBlur}
       onLayout={onLayoutContainer}
+      style={{ width: "100%" }}
     >
       {(focused) => (
         <View>
@@ -145,13 +224,26 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
             style={{
               flexDirection: "row",
               transform: [
-                { translateX: Animated.multiply(-1, scrollAnimatedValue) },
+                {
+                  translateX: Animated.multiply(
+                    -1,
+                    Animated.add(
+                      scrollAnimatedValue,
+                      (INDEX_OFFSET - renderableItems.shifted) * itemSize.width
+                    )
+                  ),
+                },
               ],
             }}
           >
-            {data.map((item, index) => (
-              <Animated.View key={keyExtractor(item)} style={{ ...itemSize }}>
-                {renderItem({ item, index })}
+            {renderableItems.items.map(({ item, baseIndex }, i) => (
+              <Animated.View
+                key={keyExtractor(item) + `${i}`}
+                style={{
+                  ...itemSize,
+                }}
+              >
+                {renderItem({ item, index: baseIndex })}
               </Animated.View>
             ))}
           </Animated.View>
