@@ -5,7 +5,13 @@ import { useFocusableRef } from "../../hooks/useFocusableRef";
 import { useNextFocus } from "../../hooks/useNextFocus";
 import { useOnRef } from "../../hooks/useOnRef";
 import { useTVEvent } from "../../hooks/useTVEvent";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Animated, View } from "react-native";
 import type { FakeCarouselProps as FakeCarouselProps } from "./types";
 import { useAnimatedValue } from "../../hooks/useAnimatedValue";
@@ -19,13 +25,18 @@ type DisplayItem<T> = {
   baseIndex: number;
 };
 
-const INDEX_OFFSET = 2;
+const isIndexInBaseArray = <T extends unknown>(
+  index: number,
+  baseArray: T[]
+): boolean => {
+  return 0 <= index && index < baseArray.length;
+};
 
 const getBaseIndex = <T extends unknown>(
   index: number,
   baseArray: T[]
 ): number => {
-  if (0 <= index && index < baseArray.length) {
+  if (isIndexInBaseArray(index, baseArray)) {
     return index;
   }
   if (index < 0) {
@@ -55,6 +66,7 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
   {
     data,
     itemSize,
+    indexOffset = 2,
     onSelectElement,
     keyExtractor,
     renderItem,
@@ -73,8 +85,8 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
   const isScrolling = useRef<boolean>(false);
   const scrollEndTimer = useRef<NodeJS.Timeout | null>(null);
   const renderableCount = useMemo(() => {
-    return Math.ceil(containerWidth / itemSize.width) + INDEX_OFFSET * 2;
-  }, [containerWidth, itemSize.width]);
+    return Math.ceil(containerWidth / itemSize.width) + indexOffset * 2;
+  }, [containerWidth, itemSize.width, indexOffset]);
 
   const getIndex = useCallback(
     (scrollPosition: number, round: boolean = false) => {
@@ -100,21 +112,15 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
     const newRenderableItem = createRenderableItemsFromData(
       currentIndex,
       renderableCount,
-      INDEX_OFFSET,
+      indexOffset,
       data
     );
     setRenderableItems({ items: newRenderableItem, shifted: currentIndex });
-  }, [getIndex, renderableCount, data]);
+  }, [getIndex, renderableCount, data, indexOffset]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     updateRenderableItems();
   }, [updateRenderableItems]);
-
-  // console.log({
-  //   renderableCount,
-  //   renderableItems,
-  //   currentIndex: getIndex(lastScrollPosition.current),
-  // });
 
   const {
     bool: isFocusedContainer,
@@ -229,23 +235,42 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
                     -1,
                     Animated.add(
                       scrollAnimatedValue,
-                      (INDEX_OFFSET - renderableItems.shifted) * itemSize.width
+                      (indexOffset - renderableItems.shifted) * itemSize.width
                     )
                   ),
                 },
               ],
             }}
           >
-            {renderableItems.items.map(({ item, baseIndex }, i) => (
-              <Animated.View
-                key={keyExtractor(item) + `${i}`}
-                style={{
-                  ...itemSize,
-                }}
-              >
-                {renderItem({ item, index: baseIndex })}
-              </Animated.View>
-            ))}
+            {renderableItems.items.map(({ item, baseIndex }, i) => {
+              const animatedBaseIndex =
+                i - indexOffset + renderableItems.shifted;
+              return (
+                <Animated.View
+                  key={`${keyExtractor(item)}_${i}`}
+                  style={{
+                    ...itemSize,
+                  }}
+                >
+                  {renderItem({
+                    item,
+                    index: baseIndex,
+                    animated: Animated.divide(
+                      scrollAnimatedValue,
+                      itemSize.width
+                    ).interpolate({
+                      inputRange: [
+                        animatedBaseIndex - 1,
+                        animatedBaseIndex,
+                        animatedBaseIndex + 1,
+                      ],
+                      outputRange: [0, 1, 0],
+                      extrapolate: "clamp",
+                    }),
+                  })}
+                </Animated.View>
+              );
+            })}
           </Animated.View>
 
           {focused && (

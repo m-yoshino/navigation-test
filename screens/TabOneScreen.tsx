@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useMemo } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { Animated, ScrollView, StyleSheet } from "react-native";
 import { FakeCarousel } from "../components/FakeCarousel";
 import type { FakeCarouselProps } from "../components/FakeCarousel/types";
 import { Text, View } from "../components/Themed";
@@ -9,10 +9,10 @@ const ITEM_SIZE = { width: 200, height: 100 };
 
 export default function TabOneScreen() {
   const data = useMemo(() => {
-    // let [base, max, i] = [[] as string[], 10, 0];
-    // while (i++ < max) base.push(`${i}`);
-    // return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
-    return ["0", "1", "2", "3"];
+    let [base, max, i] = [[] as string[], 10, 0];
+    while (i++ < max) base.push(`${i}`);
+    return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
+    // return ["0", "1", "2", "3"];
   }, []);
 
   const onSelectElement = useCallback<
@@ -20,18 +20,32 @@ export default function TabOneScreen() {
   >((item) => console.log("onSelectElement", item), []);
 
   const renderItem = useCallback<FakeCarouselProps<string>["renderItem"]>(
-    ({ item }) => (
-      <View
+    ({ item, animated }) => (
+      <Animated.View
         style={{
           ...ITEM_SIZE,
           backgroundColor: "red",
           borderRadius: 8,
           alignItems: "center",
           justifyContent: "center",
+          opacity: animated.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.5, 1],
+            extrapolate: "clamp",
+          }),
+          transform: [
+            {
+              scale: animated.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.9, 1],
+                extrapolate: "clamp",
+              }),
+            },
+          ],
         }}
       >
         <Text>{item}</Text>
-      </View>
+      </Animated.View>
     ),
     []
   );
