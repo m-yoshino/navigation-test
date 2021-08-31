@@ -65,7 +65,6 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
   {
     data,
     itemSize,
-    indexOffset = 2,
     keyExtractor,
     renderItem,
     animationConfig,
@@ -95,10 +94,14 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
   }>({ offset: 0, animated: false });
   const isScrolling = useRef<boolean>(false);
   const scrollEndTimer = useRef<NodeJS.Timeout | null>(null);
-  const renderableCount = useMemo(
-    () => Math.ceil(containerWidth / itemSize.width) + indexOffset * 2,
-    [containerWidth, itemSize.width, indexOffset]
-  );
+  const { renderableCount, indexOffset } = useMemo(() => {
+    const count = Math.ceil(containerWidth / itemSize.width);
+    const offset = Math.max(Math.ceil(count / 2), 2);
+    return {
+      renderableCount: count + offset * 2,
+      indexOffset: offset,
+    };
+  }, [containerWidth, itemSize.width]);
 
   const getCurrentIndex = useCallback(() => {
     const toFixedFractionDigits = 5;
