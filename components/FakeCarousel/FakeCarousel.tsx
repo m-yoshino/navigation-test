@@ -66,10 +66,12 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
     data,
     itemSize,
     indexOffset = 2,
-    onSelectElement,
     keyExtractor,
     renderItem,
     animationConfig,
+    onSelectElement,
+    onFocus: propsOnFocus,
+    onBlur: propsOnBlur,
   }: FakeCarouselProps<T>,
   ref: FocusableRef | null
 ) {
@@ -123,8 +125,8 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
 
   const {
     bool: isFocusedContainer,
-    setTrue: onFocus,
-    setFalse: onBlur,
+    setTrue: _onFocus,
+    setFalse: _onBlur,
   } = useBool(false);
 
   const scrollToIndex = useCallback(
@@ -207,6 +209,22 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
     nextFocusLeft: null,
   });
 
+  const onFocus = useCallback<NonNullable<FakeCarouselProps<T>["onFocus"]>>(
+    (event) => {
+      _onFocus();
+      propsOnFocus?.(event);
+    },
+    []
+  );
+
+  const onBlur = useCallback<NonNullable<FakeCarouselProps<T>["onBlur"]>>(
+    (event) => {
+      _onBlur();
+      propsOnBlur?.(event);
+    },
+    [_onBlur, propsOnBlur]
+  );
+
   return (
     <Focusable
       ref={onRef}
@@ -215,61 +233,48 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
       onLayout={onLayoutContainer}
       style={{ width: "100%" }}
     >
-      {(focused) => (
-        <View>
-          <Animated.View
-            style={{
-              flexDirection: "row",
-              transform: [
-                {
-                  translateX: Animated.multiply(
-                    -1,
-                    Animated.add(
-                      scrollAnimatedValue,
-                      (indexOffset - renderableItems.shifted) * itemSize.width
-                    )
-                  ),
-                },
-              ],
-            }}
-          >
-            {renderableItems.items.map(({ item, baseIndex }, i) => {
-              const animatedIndex = i - indexOffset + renderableItems.shifted;
-              const key = `${keyExtractor(item)}_${i}`;
-              return (
-                <Animated.View key={key} style={itemSize}>
-                  {renderItem({
-                    item,
-                    index: baseIndex,
-                    animated: Animated.divide(
-                      scrollAnimatedValue,
-                      itemSize.width
-                    ).interpolate({
-                      inputRange: [
-                        animatedIndex - 1,
-                        animatedIndex,
-                        animatedIndex + 1,
-                      ],
-                      outputRange: [0, 1, 0],
-                      extrapolate: "clamp",
-                    }),
-                  })}
-                </Animated.View>
-              );
-            })}
-          </Animated.View>
-
-          {focused && (
-            <View
-              style={{
-                position: "absolute",
-                ...itemSize,
-                borderWidth: 2,
-                borderColor: "white",
-              }}
-            />
-          )}
-        </View>
+      {() => (
+        <Animated.View
+          style={{
+            flexDirection: "row",
+            transform: [
+              {
+                translateX: Animated.multiply(
+                  -1,
+                  Animated.add(
+                    scrollAnimatedValue,
+                    (indexOffset - renderableItems.shifted) * itemSize.width
+                  )
+                ),
+              },
+            ],
+          }}
+        >
+          {renderableItems.items.map(({ item, baseIndex }, i) => {
+            const animatedIndex = i - indexOffset + renderableItems.shifted;
+            const key = `${keyExtractor(item)}_${i}`;
+            return (
+              <View key={key} style={itemSize}>
+                {renderItem({
+                  item,
+                  index: baseIndex,
+                  animated: Animated.divide(
+                    scrollAnimatedValue,
+                    itemSize.width
+                  ).interpolate({
+                    inputRange: [
+                      animatedIndex - 1,
+                      animatedIndex,
+                      animatedIndex + 1,
+                    ],
+                    outputRange: [0, 1, 0],
+                    extrapolate: "clamp",
+                  }),
+                })}
+              </View>
+            );
+          })}
+        </Animated.View>
       )}
     </Focusable>
   );

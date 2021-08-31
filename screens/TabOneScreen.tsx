@@ -4,6 +4,7 @@ import { Animated, ScrollView, StyleSheet } from "react-native";
 import { FakeCarousel } from "../components/FakeCarousel";
 import type { FakeCarouselProps } from "../components/FakeCarousel/types";
 import { Text, View } from "../components/Themed";
+import { useBool } from "../hooks/useBool";
 
 const ITEM_SIZE = { width: 200, height: 100 };
 
@@ -54,6 +55,8 @@ export default function TabOneScreen() {
     []
   );
 
+  const { bool: focused, setTrue: onFocus, setFalse: onBlur } = useBool(false);
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Tab One</Text>
@@ -61,24 +64,32 @@ export default function TabOneScreen() {
       <View
         style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
       >
-        <FakeCarousel
-          data={data}
-          itemSize={ITEM_SIZE}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          onSelectElement={onSelectElement}
-        />
-      </View>
-      <View
-        style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
-      >
-        <FakeCarousel
-          data={data}
-          itemSize={ITEM_SIZE}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          onSelectElement={onSelectElement}
-        />
+        <View
+          style={{
+            backgroundColor: "transparent",
+          }}
+        >
+          <FakeCarousel
+            data={data}
+            itemSize={ITEM_SIZE}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            onSelectElement={onSelectElement}
+            onFocus={onFocus}
+            onBlur={onBlur}
+          />
+          {focused && (
+            <View
+              style={{
+                position: "absolute",
+                ...ITEM_SIZE,
+                borderWidth: 2,
+                borderColor: "white",
+                backgroundColor: "transparent",
+              }}
+            />
+          )}
+        </View>
       </View>
     </ScrollView>
   );
