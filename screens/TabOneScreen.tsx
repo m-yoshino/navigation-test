@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useCallback, useMemo } from "react";
 import { ScrollView, StyleSheet } from "react-native";
+import { FakeCarousel } from "../components/FakeCarousel";
 import { FocusableCarousel } from "../components/FocusableCarousel";
 import { FocusableCarouselProps } from "../components/FocusableCarousel/types";
 import { Text, View } from "../components/Themed";
@@ -9,9 +10,10 @@ const ITEM_SIZE = { width: 200, height: 100 };
 
 export default function TabOneScreen() {
   const data = useMemo(() => {
-    let [base, max, i] = [[] as string[], 10, 0];
-    while (i++ < max) base.push(`${i}`);
-    return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
+    // let [base, max, i] = [[] as string[], 10, 0];
+    // while (i++ < max) base.push(`${i}`);
+    // return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
+    return ["0", "1", "2", "3", "4"];
   }, []);
 
   const onListElementPress = useCallback(
@@ -47,7 +49,13 @@ export default function TabOneScreen() {
       <View
         style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
       >
-        <FocusableCarousel
+        {/* <FocusableCarousel
+          data={data}
+          itemSize={ITEM_SIZE}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+        /> */}
+        <FakeCarousel
           data={data}
           itemSize={ITEM_SIZE}
           renderItem={renderItem}

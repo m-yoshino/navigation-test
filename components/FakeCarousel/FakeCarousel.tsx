@@ -5,33 +5,31 @@ import { useFocusableRef } from "../../hooks/useFocusableRef";
 import { useNextFocus } from "../../hooks/useNextFocus";
 import { useOnRef } from "../../hooks/useOnRef";
 import { useTVEvent } from "../../hooks/useTVEvent";
-import React, { useCallback, useMemo, useRef } from "react";
-import { Animated, ScrollView, View } from "react-native";
-import type { ScrollViewProps } from "react-native";
-import type { FocusableCarouselProps } from "./types";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { Animated, View } from "react-native";
+import type { FakeCarouselProps as FakeCarouselProps } from "./types";
 import { useAnimatedValue } from "../../hooks/useAnimatedValue";
 import { useLayout } from "../../hooks/useLayout";
 import { useEffect } from "react";
+import { Easing } from "react-native";
 
-export const FocusableCarousel = React.forwardRef(function FocusableCarousel<T>(
-  props: FocusableCarouselProps<T>,
+export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
+  props: FakeCarouselProps<T>,
   ref: FocusableRef | null
 ) {
   const { data, itemSize, keyExtractor, renderItem } = props;
   const { width: containerWidth, onLayout: onLayoutContainer } = useLayout();
   const selfRef = useFocusableRef();
   const onRef = useOnRef(selfRef, ref);
-  const scrollViewRef = useRef<ScrollView>();
   const scrollAnimatedValue = useAnimatedValue();
   const lastScrollPosition = useRef<number>(0);
+  const [scrollOffset, setScrollOffset] = useState<{
+    offset: number;
+    animated: boolean;
+  }>({ offset: 0, animated: false });
+
   const isScrolling = useRef<boolean>(false);
   const scrollEndTimer = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    scrollAnimatedValue.addListener(({ value }) => {
-      console.log("scrollAnimatedValue", { value });
-    });
-  }, []);
 
   const getIndex = useCallback(
     (scrollPosition: number, round: boolean = false) => {
@@ -54,34 +52,20 @@ export const FocusableCarousel = React.forwardRef(function FocusableCarousel<T>(
     setFalse: onBlur,
   } = useBool(false);
 
-  const contentSize = useRef<number>(0);
-  const onContentSizeChange = useCallback<
-    NonNullable<ScrollViewProps["onContentSizeChange"]>
-  >((_contentSize) => {
-    contentSize.current = _contentSize;
-  }, []);
-
   const scrollToIndex = useCallback(
     (index: number, animated: boolean = true) => {
       if (isScrolling.current) {
         return;
       }
       isScrolling.current = true;
-      if (!scrollViewRef.current) {
-        isScrolling.current = false;
-        return;
-      }
+
       const x = index * itemSize.width;
-      console.log("scrollToIndex", { index, x, contentSize });
-      if (x > contentSize.current) {
-        isScrolling.current = false;
-        return;
-      }
+      console.log("scrollToIndex", { index, x });
       if (lastScrollPosition.current === x) {
         isScrolling.current = false;
         return;
       }
-      scrollViewRef.current.scrollTo({ x, y: 0, animated });
+      setScrollOffset({ offset: x, animated });
     },
     [itemSize.width]
   );
@@ -92,20 +76,34 @@ export const FocusableCarousel = React.forwardRef(function FocusableCarousel<T>(
     console.log("onScrollEnd");
   }, []);
 
-  const onScroll = useCallback<NonNullable<ScrollViewProps["onScroll"]>>(
-    ({ nativeEvent }) => {
-      const position = nativeEvent.contentOffset.x;
-      lastScrollPosition.current = position;
-
-      console.log("onScroll", { position });
-
+  useEffect(() => {
+    const listenerID = scrollAnimatedValue.addListener(({ value }) => {
+      lastScrollPosition.current = value;
       if (scrollEndTimer.current !== null) {
         clearTimeout(scrollEndTimer.current);
       }
-      scrollEndTimer.current = setTimeout(onScrollEnd, 100);
-    },
-    []
-  );
+      scrollEndTimer.current = setTimeout(() => {
+        onScrollEnd();
+      }, 100);
+    });
+    return () => {
+      scrollAnimatedValue.removeListener(listenerID);
+    };
+  }, [scrollAnimatedValue, onScrollEnd]);
+
+  useEffect(() => {
+    if (scrollOffset.animated) {
+      isScrolling.current = true;
+      Animated.timing(scrollAnimatedValue, {
+        toValue: scrollOffset.offset,
+        duration: 250,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }).start();
+    } else {
+      scrollAnimatedValue.setValue(scrollOffset.offset);
+    }
+  }, [scrollOffset]);
 
   const tvEventListener = useMemo(
     () => ({
@@ -141,34 +139,20 @@ export const FocusableCarousel = React.forwardRef(function FocusableCarousel<T>(
     >
       {(focused) => (
         <View>
-          <Animated.ScrollView
-            ref={scrollViewRef}
-            horizontal
-            onContentSizeChange={onContentSizeChange}
-            showsHorizontalScrollIndicator={false}
-            decelerationRate="fast"
-            scrollToOverflowEnabled
-            overScrollMode="always"
-            onScroll={Animated.event(
-              [
-                {
-                  nativeEvent: {
-                    contentOffset: { x: scrollAnimatedValue },
-                  },
-                },
+          <Animated.View
+            style={{
+              flexDirection: "row",
+              transform: [
+                { translateX: Animated.multiply(-1, scrollAnimatedValue) },
               ],
-              {
-                useNativeDriver: true,
-                listener: onScroll,
-              }
-            )}
+            }}
           >
             {data.map((item, index) => (
               <Animated.View key={keyExtractor(item)} style={{ ...itemSize }}>
                 {renderItem({ item, index })}
               </Animated.View>
             ))}
-          </Animated.ScrollView>
+          </Animated.View>
 
           {focused && (
             <View
@@ -185,5 +169,5 @@ export const FocusableCarousel = React.forwardRef(function FocusableCarousel<T>(
     </Focusable>
   );
 }) as <T>(
-  props: FocusableCarouselProps<T> & React.RefAttributes<FocusableComponent>
+  props: FakeCarouselProps<T> & React.RefAttributes<FocusableComponent>
 ) => React.ReactElement | null;
