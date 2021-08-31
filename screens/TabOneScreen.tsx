@@ -12,12 +12,11 @@ export default function TabOneScreen() {
     let [base, max, i] = [[] as string[], 10, 0];
     while (i++ < max) base.push(`${i}`);
     return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
-    // return ["0", "1", "2", "3"];
   }, []);
 
   const onSelectElement = useCallback<
     NonNullable<FakeCarouselProps<string>["onSelectElement"]>
-  >((item) => console.log("onSelectElement", item), []);
+  >(({ item, index }) => console.log("onSelectElement", { item, index }), []);
 
   const renderItem = useCallback<FakeCarouselProps<string>["renderItem"]>(
     ({ item, animated }) => (
@@ -59,6 +58,17 @@ export default function TabOneScreen() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Tab One</Text>
 
+      <View
+        style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
+      >
+        <FakeCarousel
+          data={data}
+          itemSize={ITEM_SIZE}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          onSelectElement={onSelectElement}
+        />
+      </View>
       <View
         style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
       >

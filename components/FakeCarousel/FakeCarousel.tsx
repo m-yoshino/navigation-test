@@ -1,6 +1,5 @@
 import React, {
   useCallback,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -17,6 +16,13 @@ import { useAnimatedValue } from "../../hooks/useAnimatedValue";
 import { useLayout } from "../../hooks/useLayout";
 import type { FocusableComponent, FocusableRef } from "../../@types/tvos";
 import type { FakeCarouselProps, FakeCarouselRenderableItem } from "./types";
+
+const DEFAULT_ANIMATION_CONFIG: NonNullable<
+  FakeCarouselProps<unknown>["animationConfig"]
+> = {
+  duration: 250,
+  easing: Easing.out(Easing.ease),
+};
 
 const isIndexInBaseArray = <T extends unknown>(
   index: number,
@@ -63,6 +69,7 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
     onSelectElement,
     keyExtractor,
     renderItem,
+    animationConfig,
   }: FakeCarouselProps<T>,
   ref: FocusableRef | null
 ) {
@@ -77,20 +84,19 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
   }>({ offset: 0, animated: false });
   const isScrolling = useRef<boolean>(false);
   const scrollEndTimer = useRef<NodeJS.Timeout | null>(null);
-  const renderableCount = useMemo(() => {
-    return Math.ceil(containerWidth / itemSize.width) + indexOffset * 2;
-  }, [containerWidth, itemSize.width, indexOffset]);
-
-  const getIndex = useCallback(
-    (scrollPosition: number, round: boolean = false) => {
-      const toFixedFractionDigits = 5;
-      const itemIndex = Number(
-        (scrollPosition / itemSize.width).toFixed(toFixedFractionDigits)
-      );
-      return round ? Math.round(itemIndex) : itemIndex;
-    },
-    [itemSize.width]
+  const renderableCount = useMemo(
+    () => Math.ceil(containerWidth / itemSize.width) + indexOffset * 2,
+    [containerWidth, itemSize.width, indexOffset]
   );
+
+  const getCurrentIndex = useCallback(() => {
+    const toFixedFractionDigits = 5;
+    return Number(
+      (lastScrollPosition.current / itemSize.width).toFixed(
+        toFixedFractionDigits
+      )
+    );
+  }, [itemSize.width]);
 
   const [renderableItems, setRenderableItems] = useState<{
     items: FakeCarouselRenderableItem<T>[];
@@ -101,7 +107,7 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
   });
 
   const updateRenderableItems = useCallback(() => {
-    const currentIndex = getIndex(lastScrollPosition.current);
+    const currentIndex = getCurrentIndex();
     const newRenderableItem = createRenderableItemsFromData(
       currentIndex,
       renderableCount,
@@ -109,9 +115,9 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
       data
     );
     setRenderableItems({ items: newRenderableItem, shifted: currentIndex });
-  }, [getIndex, renderableCount, data, indexOffset]);
+  }, [getCurrentIndex, renderableCount, data, indexOffset]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     updateRenderableItems();
   }, [updateRenderableItems]);
 
@@ -164,43 +170,35 @@ export const FakeCarousel = React.forwardRef(function FakeCarousel<T>(
 
   useEffect(() => {
     if (scrollOffset.animated) {
-      isScrolling.current = true;
       Animated.timing(scrollAnimatedValue, {
+        ...DEFAULT_ANIMATION_CONFIG,
+        ...animationConfig,
         toValue: scrollOffset.offset,
-        duration: 250,
-        easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }).start();
     } else {
       scrollAnimatedValue.setValue(scrollOffset.offset);
     }
-  }, [scrollAnimatedValue, scrollOffset]);
+  }, [scrollAnimatedValue, scrollOffset, animationConfig]);
 
   const tvEventListener = useMemo(
     () => ({
       right: () => {
-        const currentIndex = getIndex(lastScrollPosition.current);
+        const currentIndex = getCurrentIndex();
         scrollToIndex(currentIndex + 1);
-        console.log("tvEventListener#right()", { currentIndex });
       },
       left: () => {
-        const currentIndex = getIndex(lastScrollPosition.current);
+        const currentIndex = getCurrentIndex();
         scrollToIndex(currentIndex - 1);
-        console.log("tvEventListener#left()", { currentIndex });
       },
       select: () => {
-        const currentIndex = getIndex(lastScrollPosition.current);
+        const currentIndex = getCurrentIndex();
         const index = getBaseIndex(currentIndex, data);
         const item = data[index];
-        console.log("FocusableCarousel#onSelect()", {
-          index,
-          currentIndex,
-          item,
-        });
-        onSelectElement?.(item);
+        onSelectElement?.({ item, index });
       },
     }),
-    [getIndex, scrollToIndex, onSelectElement, data]
+    [getCurrentIndex, scrollToIndex, onSelectElement, data]
   );
   useTVEvent(tvEventListener, !isFocusedContainer);
 

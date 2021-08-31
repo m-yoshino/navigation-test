@@ -7,9 +7,10 @@ export type FakeCarouselProps<T> = {
   itemSize: { width: number; height: number };
   renderItem: (info: { item: T; index: number, animated: Animated.AnimatedInterpolation }) => React.ReactNode;
   keyExtractor: (item: T) => string;
-  onSelectElement?: (item: T) => void;
+  onSelectElement?: (info: {item: T, index: number}) => void;
   indexOffset?: number;
   nextFocusLeft?: FocusableRefObject;
+  animationConfig?: Omit<Animated.TimingAnimationConfig, "useNativeDriver" | "toValue">
 };
 
 export type FakeCarouselRenderableItem<T> = {
