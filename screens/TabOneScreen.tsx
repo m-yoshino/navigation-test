@@ -123,6 +123,30 @@ export default function TabOneScreen() {
           )}
         </View>
       </View>
+
+      <View
+        style={{ width: "100%", padding: 24, backgroundColor: "transparent" }}
+      >
+        <FakeCarousel
+          data={data}
+          itemSize={{ width: 200, height: 100 }}
+          renderItem={({ item }) => (
+            <View
+              style={{
+                ...{ width: 200, height: 100 },
+                backgroundColor: "gray",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text>{item}</Text>
+            </View>
+          )}
+          keyExtractor={keyExtractor}
+          onSelectElement={onSelectElement}
+          align="flex-start"
+        />
+      </View>
     </ScrollView>
   );
 }
