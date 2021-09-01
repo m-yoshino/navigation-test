@@ -49,7 +49,10 @@ const createRenderableItemsFromData = <T extends unknown>(
   renderableCount: number,
   indexOffset: number,
   data: T[]
-) => {
+): FakeCarouselRenderableItem<T>[] => {
+  if (data.length === 0) {
+    return [];
+  }
   return Array.from({ length: renderableCount }).map((_, i) => {
     const index = i + currentIndex - indexOffset;
     const baseIndex = getBaseIndex(index, data);
