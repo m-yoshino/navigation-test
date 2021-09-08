@@ -1,20 +1,29 @@
 import * as React from "react";
-import { useCallback, useMemo } from "react";
-import { Animated, ScrollView, StyleSheet, Image } from "react-native";
+import { useCallback, useState } from "react";
+import { Animated, ScrollView, StyleSheet } from "react-native";
 import { FakeCarousel } from "../components/FakeCarousel";
 import type { FakeCarouselProps } from "../components/FakeCarousel/types";
 import { Text, View } from "../components/Themed";
 import { useBool } from "../hooks/useBool";
 import sampleImage from "../assets/images/sample.png";
 import { useLayout } from "../hooks/useLayout";
+import { useEffect } from "react";
 
 const ITEM_SIZE = { width: 600, height: 300 };
 
 export default function TabOneScreen() {
-  const data = useMemo(() => {
-    let [base, max, i] = [[] as string[], 10, 0];
-    while (i++ < max) base.push(`${i}`);
-    return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
+  // const data = useMemo(() => {
+  //   // let [base, max, i] = [[] as string[], 10, 0];
+  //   // while (i++ < max) base.push(`${i}`);
+  //   // return base.flatMap((i) => base.map((ii) => `${i}:${ii}`));
+  //   return [] as string[];
+  // }, []);
+  const [data, setData] = useState<string[]>([]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setData(["0", "1", "2", "3"]);
+    }, 5000);
   }, []);
 
   const onSelectElement = useCallback<
